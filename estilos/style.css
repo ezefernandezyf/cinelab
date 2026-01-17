@@ -1,0 +1,465 @@
+.fondo {
+  background-color: #00182e
+}
+
+.fondoModal {
+  background-color: #aa1313;
+}
+
+.boton {
+  background-color: #1b1919 !important;
+  color: white !important;
+}
+
+.lista:hover {
+  scale: 1.005;
+  transition: all 0.3s ease-in-out;
+  background-color: #aae4ff !important;
+
+}
+
+.fondoLoader {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  display: flex !important;
+}
+
+.loaderActivo {
+  background-color: rgba(0, 0, 0, 0.6);
+  opacity: 1;
+  pointer-events: all;
+  display: flex !important;
+  z-index: 9999;
+
+}
+
+.lista {
+  cursor: pointer;
+}
+
+.poster {
+  width: 100%;
+  height: 360px;
+  max-width: 286px;
+  aspect-ratio: 286 / 352.13;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #ffffff;
+}
+
+.poster {
+  opacity: 0;
+  transition: opacity .25s ease-in;
+}
+
+
+.sugerenciasEstilo {
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+;
+
+.suggestion-item:focus {
+  background-color: #6b90a0;
+  outline: none;
+}
+
+;
+
+
+.navbar .container-fluid {
+  position: relative;
+}
+
+;
+
+
+@media (min-width: 992px) {
+  .navbar .center-nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+    z-index: 1;
+  }
+}
+
+;
+
+
+.center-nav>.nav-item {
+  white-space: nowrap;
+}
+
+;
+
+
+.navbar .dropdown-menu {
+  z-index: 1050;
+}
+
+;
+
+
+
+
+
+
+
+.watched-card .card-footer {
+  display: flex;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  background: transparent;
+  border-top: 0;
+  overflow: hidden;
+}
+
+
+.watched-card .card-footer .btn {
+  flex: 1 1 0;
+  min-width: 75px;
+  padding: .35rem .5rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+
+@media (max-width: 576px) {
+  .watched-card .card-footer {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .4rem;
+  }
+
+  .watched-card .card-footer .btn {
+    min-width: 0;
+    flex: 1 1 calc(33.333% - .6rem);
+  }
+}
+
+
+
+
+
+/* TMDB browse styles (lightweight) */
+
+.tmdb-scroller {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.tmdb-poster-card {
+  scroll-snap-align: start;
+  transition: transform .18s ease, box-shadow .18s ease;
+  position: relative;
+}
+
+.tmdb-poster-card:focus,
+.tmdb-poster-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  outline: none;
+}
+
+/* overlay with simple info on hover */
+.tmdb-poster-overlay {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.15));
+  color: #fff;
+  border-radius: 6px;
+  font-size: .85rem;
+  opacity: 0;
+  transition: opacity .16s ease;
+  pointer-events: none;
+}
+
+.tmdb-poster-card:hover .tmdb-poster-overlay,
+.tmdb-poster-card:focus .tmdb-poster-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tmdb-row-controls {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+
+.tmdb-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tmdb-arrow-btn:active {
+  transform: scale(.98);
+}
+
+@media (min-width: 1200px) {
+  .tmdb-poster-card {
+    width: 180px;
+  }
+
+  .tmdb-poster-card img {
+    height: 260px;
+  }
+}
+
+@media (max-width: 576px) {
+  .tmdb-poster-card {
+    flex: 0 0 140px;
+    /* ancho fijo cómodo para móviles */
+    width: 140px;
+  }
+
+  .tmdb-poster-card img {
+    height: 200px;
+    /* mantener ratio visual */
+  }
+
+  .tmdb-scroller {
+    gap: 0.5rem;
+    padding-bottom: 10px;
+  }
+
+  #tmdb-toasts {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    bottom: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  #tmdb-toasts .tmdb-toast {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+}
+
+.tmdb-row-header {
+  gap: 1rem;
+  align-items: center;
+}
+
+#tmdb-toasts {
+  z-index: 1400;
+}
+
+#tmdb-toasts .tmdb-toast {
+  margin-bottom: .5rem;
+}
+
+
+@media (max-width: 576px) {
+
+
+  #tmdb-browse .d-flex.align-items-center.justify-content-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+  }
+
+  #tmdb-browse .d-flex.gap-2.align-items-center {
+    width: 100%;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+
+  #tmdb-genre-select {
+    width: 100% !important;
+
+  }
+}
+
+/* fallback: asegurar que los toasts individuales se muestren correctamente */
+#tmdb-toasts>.tmdb-toast {
+  margin-bottom: .5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Toaster fixes: asegurar visibilidad y evitar overlays que lo tapen */
+#tmdb-toasts {
+  z-index: 99999 !important;
+  pointer-events: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0) + 1rem) !important;
+
+}
+
+/* reglas para la toast individual */
+#tmdb-toasts>.tmdb-toast {
+  margin-bottom: .5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  transition: transform 260ms cubic-bezier(.2, .9, .2, 1), opacity 260ms ease;
+  transform: translateY(10px);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+#tmdb-toasts>.tmdb-toast.is-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+#tmdb-toasts>.tmdb-toast.is-hiding {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  #tmdb-toasts>.tmdb-toast,
+  #tmdb-toasts>.tmdb-toast.is-visible,
+  #tmdb-toasts>.tmdb-toast.is-hiding {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* móvil: centrar y dar ancho casi total */
+@media (max-width: 576px) {
+  #tmdb-toasts {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    bottom: 1.5rem !important;
+    padding: 0.5rem !important;
+    width: calc(100% - 2rem) !important;
+  }
+
+  #tmdb-toasts>.tmdb-toast {
+    max-width: calc(100% - 1rem);
+  }
+}
+
+/* desktop: colocar a la derecha */
+@media (min-width: 577px) {
+  #tmdb-toasts {
+    right: .75rem !important;
+    left: auto !important;
+    bottom: .75rem !important;
+  }
+
+  #tmdb-toasts>.tmdb-toast {
+    max-width: 380px;
+  }
+}
+
+/* garantizar pointer events */
+#tmdb-toasts,
+#tmdb-toasts * {
+  pointer-events: auto !important;
+}
+
+
+/* Skeleton card */
+.tmdb-skeleton-card {
+  width: 160px;
+  height: 240px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e6e6e6 25%, #f5f5f5 37%, #e6e6e6 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+/* small caption skeleton */
+.tmdb-skeleton-caption {
+  width: 110px;
+  height: 12px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: #eee;
+}
+
+/* shimmer keyframes */
+@keyframes shimmer {
+  0% {
+    background-position: -400% 0;
+  }
+
+  100% {
+    background-position: 400% 0;
+  }
+}
+
+/* responsive tweak */
+@media (max-width: 576px) {
+  .tmdb-skeleton-card {
+    width: 140px;
+    height: 200px;
+  }
+
+  .tmdb-skeleton-item {
+    width: 140px;
+  }
+}
+
+/* contenedor del skeleton, ocupa espacio similar a .tmdb-poster-card */
+.tmdb-skeleton-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 160px;
+  /* coincide con .tmdb-poster-card default */
+  box-sizing: border-box;
+}
+
+/* respetar prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .tmdb-skeleton-card {
+    animation: none !important;
+    background: #eee !important;
+  }
+
+  .tmdb-poster-card,
+  #tmdb-toasts>.tmdb-toast {
+    transition: none !important;
+  }
+}
+
+
+.tmdb-poster-card:focus,
+.tmdb-arrow-btn:focus,
+.tmdb-row-controls button:focus,
+.tmdb-toast button:focus {
+  outline: 3px solid rgba(100, 150, 255, 0.9);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+

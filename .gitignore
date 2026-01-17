@@ -1,0 +1,37 @@
+# Sistema / OS
+.DS_Store
+Thumbs.db
+
+# Node / dependencias
+node_modules/
+
+# Variables de entorno / claves (no subirlas)
+.env
+*.env
+
+# IDEs / editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+*.log
+
+# Builds / bundles
+dist/
+build/
+
+# Cachés
+.cache/
+*.tmp
+
+# Archivos temporales del SO / editor
+*.swp
+*~
+.cache
+
+# Otros
+coverage/

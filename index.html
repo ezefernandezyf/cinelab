@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Buscador de películas y series" />
+  <meta name="author" content="Ezequiel Alejandro Fernández" />
+  <meta name="keywords"
+    content="cine, pelicula, peliculas, serie, series, buscar, buscador, movie, movies, tv show, tv shows" />
+
+  <title>Buscador de peliculas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+  <link rel="stylesheet" href="estilos/style.css" />
+</head>
+
+<body class="fondo">
+
+  <nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top" role="navigation" aria-label="Main navigation">
+    <div class="container-fluid position-relative">
+      <a class="navbar-brand" href="#">Navbar</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+        aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav center-nav d-lg-flex flex-lg-row gap-3">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#" data-view="home">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="sections/watched.html" data-view="watched">Películas vistas</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="sections/historial.html" data-view="searchHistory">Historial</a>
+          </li>
+          <li class="nav-item ">
+            <a class="nav-link" href="sections/categories.html" data-view="categories">Filtros/Categorías</a>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav ms-auto d-none d-lg-flex">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Usuario</a>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav d-lg-none mt-2">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Usuario</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Loader global (overlay) -->
+  <div class="flex-column align-items-center justify-content-center min-vh-100 min-vw-100 position-fixed fondoLoader"
+    id="loader" aria-hidden="true">
+    <div class="spinner-border p-2 text-light" role="status" aria-hidden="true"></div>
+    <p class="mt-2 mb-0 text-center fs-4 text-light">Buscando película…</p>
+  </div>
+
+  <main role="main" class="container my-5 pt-5">
+    <!-- VIEW: HOME (buscador) -->
+    <section id="view-home" class="mb-4">
+      <div class="container rounded shadow-lg bg-light my-3">
+        <div class="input-group p-4 position-relative">
+          <input type="text" class="form-control" placeholder="Buscar película..." id="buscarPelicula"
+            aria-autocomplete="list" aria-controls="sugerencias" aria-expanded="false" />
+          <button class="btn btn-primary rounded" id="btnPelicula" type="button">Buscar</button>
+
+          <ul class="list-group position-absolute w-100 sugerenciasEstilo" role="listbox" id="sugerencias"
+            aria-hidden="true"></ul>
+        </div>
+
+        <div class="rounded shadow-lg bg-light d-flex justify-content-center p-4 d-none" id="resultados"
+          aria-live="polite">
+        </div>
+
+        <!-- Historial removido de aquí (ahora es página separada) -->
+
+      </div>
+
+      <!-- Modal de errores (global, pero lo colocamos dentro de home por simplicidad) -->
+      <div class="modal fade" id="modalError" tabindex="-1" aria-labelledby="modalErrorTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content fondoModal text-white border border-dark">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="modalErrorTitulo"></h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" data-bs-theme="dark"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+              <button type="button" class="btn boton" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+  <script src="java/common.js"></script>
+  <script src="java/home.js"></script>
+</body>
+
+</html>
