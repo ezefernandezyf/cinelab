@@ -1,23 +1,106 @@
+/* Variables de tema */
+:root {
+  --bg: #001824;
+  /* fondo principal */
+  --surface: #0f3a52;
+  /* tarjetas / superficies */
+  --surface-2: #082f3f;
+  /* modales / acentos oscuros */
+  --text: #f4fbff;
+  /* texto principal */
+  --muted: #8fb3c6;
+  /* texto secundario */
+  --accent: #00c2ff;
+  /* color de acción principal (CTA) */
+  --accent-600: #005bb5;
+  /* hover/acento oscuro */
+  --danger: #ff6b6b;
+  /* mensajes de error / badges */
+  --glass: rgba(255, 255, 255, 0.02);
+  --radius: 0.5rem;
+  --container-max: 1100px;
+  --focus-outline: rgba(100, 150, 255, 0.9);
+}
+
+/* Tipografías */
+html,
+body {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Body / fondo general */
+body,
 .fondo {
-  background-color: #00182e
+  background-color: var(--bg) !important;
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  margin: 0;
+  line-height: 1.45;
+  min-height: 100%;
 }
 
-.fondoModal {
-  background-color: #aa1313;
+/* Contenedor principal */
+main.container {
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-inline: 1rem;
 }
 
+/* Card default (Bootstrap .card overrides) */
+.card {
+  background: linear-gradient(180deg, var(--glass), rgba(255, 255, 255, 0.01)) !important;
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  color: var(--text);
+}
+
+/* Texto dentro de cards */
+.card-title,
+.card-text,
+.card .card-body,
+.card .card-footer {
+  color: var(--text) !important;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-class {
+  background-color: var(--accent) !important;
+  color: var(--accent-600) !important;
+  border: none;
+  box-shadow: none;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.btn-primary:hover,
+.btn-class:hover,
+.btn-primary:focus,
+.btn-class:focus {
+  background-color: var(--accent-600) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+/* Button 'boton' custom */
 .boton {
   background-color: #1b1919 !important;
   color: white !important;
+  border-radius: 6px;
+  padding: 0.45rem 0.8rem;
 }
 
+/* List hover */
 .lista:hover {
-  scale: 1.005;
-  transition: all 0.3s ease-in-out;
-  background-color: #aae4ff !important;
-
+  transform: scale(1.005);
+  transition: transform 0.18s ease-in-out, background-color 0.18s ease-in-out;
+  background-color: rgba(170, 228, 255, 0.12) !important;
 }
 
+/* Loader overlay */
 .fondoLoader {
   opacity: 0;
   pointer-events: none;
@@ -31,13 +114,9 @@
   pointer-events: all;
   display: flex !important;
   z-index: 9999;
-
 }
 
-.lista {
-  cursor: pointer;
-}
-
+/* Poster image */
 .poster {
   width: 100%;
   height: 360px;
@@ -46,40 +125,40 @@
   object-fit: cover;
   object-position: center;
   display: block;
-  background: #ffffff;
-}
-
-.poster {
+  background: var(--surface-2e);
   opacity: 0;
   transition: opacity .25s ease-in;
 }
 
+/* Texto muted personalizado */
+.text-muted-mio {
+  color: var(--muted);
+}
 
+/* Sugerencias (autocomplete) */
 .sugerenciasEstilo {
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: 1200;
   max-height: 40vh;
   overflow-y: auto;
+  background: var(--surface);
+  border-radius: 6px;
 }
 
-;
-
-.suggestion-item:focus {
-  background-color: #6b90a0;
+/* Suggestion focus */
+.suggestion-item:focus,
+.suggestion-item:hover {
+  background-color: rgba(107, 144, 160, 0.18);
   outline: none;
 }
 
-;
-
-
+/* Navbar center positioning */
 .navbar .container-fluid {
   position: relative;
 }
 
-;
-
-
+/* Centered nav items on large screens */
 @media (min-width: 992px) {
   .navbar .center-nav {
     position: absolute;
@@ -93,28 +172,16 @@
   }
 }
 
-;
-
-
 .center-nav>.nav-item {
   white-space: nowrap;
 }
 
-;
-
-
+/* Dropdown stacking context */
 .navbar .dropdown-menu {
   z-index: 1050;
 }
 
-;
-
-
-
-
-
-
-
+/* Watched card footer */
 .watched-card .card-footer {
   display: flex;
   gap: .5rem;
@@ -127,7 +194,6 @@
   overflow: hidden;
 }
 
-
 .watched-card .card-footer .btn {
   flex: 1 1 0;
   min-width: 75px;
@@ -139,7 +205,7 @@
   box-sizing: border-box;
 }
 
-
+/* Responsive adjustments for watched card footer */
 @media (max-width: 576px) {
   .watched-card .card-footer {
     flex-wrap: wrap;
@@ -153,12 +219,7 @@
   }
 }
 
-
-
-
-
-/* TMDB browse styles (lightweight) */
-
+/* TMDB browse / poster card styles */
 .tmdb-scroller {
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
@@ -177,7 +238,7 @@
   outline: none;
 }
 
-/* overlay with simple info on hover */
+/* Overlay */
 .tmdb-poster-overlay {
   position: absolute;
   left: 8px;
@@ -202,12 +263,14 @@
   pointer-events: auto;
 }
 
+/* Row controls */
 .tmdb-row-controls {
   display: flex;
   gap: .5rem;
   align-items: center;
 }
 
+/* Arrow button */
 .tmdb-arrow-btn {
   width: 36px;
   height: 36px;
@@ -215,8 +278,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -224,6 +288,7 @@
   transform: scale(.98);
 }
 
+/* Responsive poster sizing */
 @media (min-width: 1200px) {
   .tmdb-poster-card {
     width: 180px;
@@ -237,13 +302,11 @@
 @media (max-width: 576px) {
   .tmdb-poster-card {
     flex: 0 0 140px;
-    /* ancho fijo cómodo para móviles */
     width: 140px;
   }
 
   .tmdb-poster-card img {
     height: 200px;
-    /* mantener ratio visual */
   }
 
   .tmdb-scroller {
@@ -265,61 +328,21 @@
     min-width: 0;
     box-sizing: border-box;
   }
-
 }
 
-.tmdb-row-header {
-  gap: 1rem;
-  align-items: center;
-}
-
-#tmdb-toasts {
-  z-index: 1400;
-}
-
-#tmdb-toasts .tmdb-toast {
-  margin-bottom: .5rem;
-}
-
-
-@media (max-width: 576px) {
-
-
-  #tmdb-browse .d-flex.align-items-center.justify-content-between {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: .5rem;
-  }
-
-  #tmdb-browse .d-flex.gap-2.align-items-center {
-    width: 100%;
-    gap: .5rem;
-    flex-wrap: wrap;
-  }
-
-  #tmdb-genre-select {
-    width: 100% !important;
-
-  }
-}
-
-/* fallback: asegurar que los toasts individuales se muestren correctamente */
-#tmdb-toasts>.tmdb-toast {
-  margin-bottom: .5rem;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-/* Toaster fixes: asegurar visibilidad y evitar overlays que lo tapen */
+/* Toasts: ensure high z-index so they appear above modals/backdrop */
 #tmdb-toasts {
   z-index: 99999 !important;
   pointer-events: auto;
   bottom: calc(env(safe-area-inset-bottom, 0) + 1rem) !important;
-
+  position: fixed;
+  right: .75rem;
+  left: auto;
+  max-width: 380px;
+  padding: 0.5rem;
 }
 
-/* reglas para la toast individual */
+/* Toast items */
 #tmdb-toasts>.tmdb-toast {
   margin-bottom: .5rem;
   width: 100%;
@@ -331,6 +354,7 @@
   will-change: transform, opacity;
 }
 
+/* Visible / hiding states */
 #tmdb-toasts>.tmdb-toast.is-visible {
   transform: translateY(0);
   opacity: 1;
@@ -341,72 +365,40 @@
   opacity: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-
-  #tmdb-toasts>.tmdb-toast,
-  #tmdb-toasts>.tmdb-toast.is-visible,
-  #tmdb-toasts>.tmdb-toast.is-hiding {
-    transition: none !important;
-    transform: none !important;
-  }
-}
-
-/* móvil: centrar y dar ancho casi total */
-@media (max-width: 576px) {
-  #tmdb-toasts {
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    bottom: 1.5rem !important;
-    padding: 0.5rem !important;
-    width: calc(100% - 2rem) !important;
-  }
-
-  #tmdb-toasts>.tmdb-toast {
-    max-width: calc(100% - 1rem);
-  }
-}
-
-/* desktop: colocar a la derecha */
-@media (min-width: 577px) {
-  #tmdb-toasts {
-    right: .75rem !important;
-    left: auto !important;
-    bottom: .75rem !important;
-  }
-
-  #tmdb-toasts>.tmdb-toast {
-    max-width: 380px;
-  }
-}
-
-/* garantizar pointer events */
+/* Ensure pointer events on toasts */
 #tmdb-toasts,
 #tmdb-toasts * {
   pointer-events: auto !important;
 }
 
+/* Small accessibility tweaks */
+.tmdb-poster-card:focus,
+.tmdb-arrow-btn:focus,
+.tmdb-row-controls button:focus,
+.tmdb-toast button:focus {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
-/* Skeleton card */
+/* Skeleton shimmer (neutralized for dark theme) */
 .tmdb-skeleton-card {
   width: 160px;
   height: 240px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #e6e6e6 25%, #f5f5f5 37%, #e6e6e6 63%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.035) 37%, rgba(255, 255, 255, 0.05) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s linear infinite;
 }
 
-/* small caption skeleton */
 .tmdb-skeleton-caption {
   width: 110px;
   height: 12px;
   margin-top: 8px;
   border-radius: 4px;
-  background: #eee;
+  background: rgba(255, 255, 255, 0.04);
 }
 
-/* shimmer keyframes */
 @keyframes shimmer {
   0% {
     background-position: -400% 0;
@@ -417,7 +409,7 @@
   }
 }
 
-/* responsive tweak */
+/* Responsive tweaks */
 @media (max-width: 576px) {
   .tmdb-skeleton-card {
     width: 140px;
@@ -429,37 +421,284 @@
   }
 }
 
-/* contenedor del skeleton, ocupa espacio similar a .tmdb-poster-card */
-.tmdb-skeleton-item {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  width: 160px;
-  /* coincide con .tmdb-poster-card default */
-  box-sizing: border-box;
-}
-
-/* respetar prefers-reduced-motion */
+/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .tmdb-skeleton-card {
     animation: none !important;
-    background: #eee !important;
+    background: rgba(255, 255, 255, 0.02) !important;
   }
 
   .tmdb-poster-card,
   #tmdb-toasts>.tmdb-toast {
     transition: none !important;
+    transform: none !important;
   }
 }
 
+/* Footer/body padding adjustment when toasts present
+   updateBodyForToasts() JS should set body padding-bottom dynamically; fallback here:
+*/
+body.has-toasts {
+  padding-bottom: 6.25rem;
+  /* fallback if JS didn't run yet */
+}
 
-.tmdb-poster-card:focus,
-.tmdb-arrow-btn:focus,
-.tmdb-row-controls button:focus,
-.tmdb-toast button:focus {
-  outline: 3px solid rgba(100, 150, 255, 0.9);
+/* Small utilities */
+.text-muted {
+  color: var(--muted) !important;
+}
+
+.rounded-lg {
+  border-radius: calc(var(--radius) + 0.25rem) !important;
+}
+
+/* Minor: modal background custom */
+.fondoModal {
+  background-color: var(--surface-2);
+}
+
+/* Ensure cards inside sections have comfortable padding */
+.section-card {
+  padding: 1rem;
+}
+
+/* Navbar brand / title */
+/* ---------------------------
+   Navbar claro sobre fondo oscuro
+   --------------------------- */
+.navbar {
+  background: #ffffff !important;
+  /* navbar blanca */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Marca y enlaces: texto oscuro para contraste sobre fondo claro */
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #001824 !important;
+}
+
+/* Active / hover state: usar accent para destacar */
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  font-weight: 600;
+}
+
+/* Mobile collapse: fondo blanco y separación interior */
+@media (max-width: 991px) {
+  .navbar .navbar-collapse {
+    background: #ffffff;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+  }
+
+  .navbar .navbar-nav .nav-link {
+    color: #001824 !important;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .navbar .navbar-nav .nav-item+.nav-item {
+    margin-left: 0;
+  }
+}
+
+/* Asegurar dropdown contraste sobre navbar blanco */
+.navbar .dropdown-menu {
+  background: #fff !important;
+  color: #001824 !important;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Mejorar apariencia del toggler (icono de tres barras en oscuro) */
+.navbar .navbar-toggler {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(0,0,0,0.7)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Small tweak: ensure collapsed menu items are easy to tap */
+.navbar .navbar-nav .nav-link {
+  padding: .5rem .75rem;
+  border-radius: 6px;
+}
+
+/* Ensure navbar remains above content (fixed-top) */
+.navbar.fixed-top {
+  z-index: 1100;
+}
+
+/* If you keep .navbar-brand styling global, override brand specifically for white navbar */
+.navbar .navbar-brand {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  color: #001824 !important;
+}
+
+/* Accessibility: increase focus visibility for navbar items */
+.navbar .nav-link:focus,
+.navbar .navbar-brand:focus,
+.navbar .navbar-toggler:focus {
+  outline: 3px solid rgba(0, 123, 255, 0.18);
   outline-offset: 2px;
   border-radius: 6px;
+}
+
+/* Small responsive container tweak */
+@media (max-width: 768px) {
+  main.container {
+    padding-inline: 0.75rem;
+  }
+}
+
+/* End of stylesheet */
+
+/* ---------- Ajustes visuales para que quede como las capturas ---------- */
+
+/* Evitar que el contenido quede oculto por la navbar fija:
+   ponemos un padding-top en main que compense la altura de la navbar.
+   Si ya tenés un script que hace esto dinámicamente (adjustMainForNavbar),
+   este css actúa como fallback seguro.
+*/
+main[role="main"] {
+  padding-top: calc(72px + 1rem);
+  /* 72px asume navbar ~56-64px + 1rem extra */
+}
+
+/* Centrar / limitar ancho del "hero" de búsqueda */
+.section-card {
+  max-width: 820px;
+  /* ancho de la caja de búsqueda */
+  margin: 2.5rem auto;
+  /* centrado vertical / horizontal */
+  padding: 1.25rem 1.5rem;
+}
+
+/* Estética de la caja de búsqueda interna */
+.input-group {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-group .form-control {
+  height: 48px;
+  border-radius: 0.375rem 0 0 0.375rem;
+  box-shadow: none;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.input-group .btn {
+  border-radius: 0 0.375rem 0.375rem 0;
+  height: 42px;
+  margin-left: .25rem;
+  padding: 0.45rem 0.85rem;
+}
+
+/* Sombra sutil para que la caja "flote" sobre el fondo oscuro */
+.section-card {
+  box-shadow: 0 18px 40px rgba(2, 10, 14, 0.55);
+}
+
+/* Resultado inicial ocupa el centro y no muestra fondo blanco */
+#resultados {
+  width: 100%;
+  max-width: 760px;
+}
+
+/* Ajustes para mobile: mantener la navbar blanca y menú legible */
+@media (max-width: 991px) {
+
+  /* El collapse ya tiene fondo blanco, hacemos el área tocable más grande */
+  .navbar .navbar-collapse {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  /* Reducir padding-top para móviles si la pantalla es pequeña */
+  main[role="main"] {
+    padding-top: calc(64px + 0.75rem);
+  }
+
+  /* Caja de búsqueda más compacta en mobile */
+  .section-card {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.9rem;
+    max-width: calc(100% - 2.0rem);
+  }
+
+  .input-group .form-control {
+    height: 44px;
+  }
+
+  .input-group .btn {
+    height: 40px;
+    padding: 0.35rem 0.6rem;
+  }
+}
+
+/* Asegurar que el brand y navlinks con la navbar blanca se vean bien */
+.navbar .navbar-brand {
+  color: #001824 !important;
+}
+
+.navbar .nav-link {
+  color: #001824 !important;
+}
+
+/* Pequeño tweak visual para que el input y el botón no se "peguen" al borde */
+.input-group .form-control:focus {
+  box-shadow: 0 0 0 0.125rem rgba(0, 194, 255, 0.12);
+  border-color: var(--accent);
+}
+
+/* Mantener la coherencia del botón primario */
+.btn-primary {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border: none;
+}
+
+/* Si querés que la tarjeta se vea un poco más "pegada" al top (menos espacio), baja margin-top */
+.section-card.tight {
+  margin-top: 1.25rem;
+}
+
+/* Ensure toasts still above everything */
+#tmdb-toasts {
+  right: .75rem;
+  left: auto;
+}
+
+
+/* Borde sutil para el input de búsqueda y estilo en foco */
+#buscarPelicula,
+.input-group .form-control#buscarPelicula {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  /* borde tenue sobre fondo oscuro */
+  background-color: rgba(255, 255, 255, 0.02);
+  /* ligera elevación visual */
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+/* Para que el borde contraste mejor en pantallas claras si llegase a usarse */
+@media (prefers-color-scheme: light) {
+
+  #buscarPelicula,
+  .input-group .form-control#buscarPelicula {
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    background-color: #fff;
+
+  }
+}
+
+/* Foco: color de acento y sombra ligera */
+#buscarPelicula:focus,
+.input-group .form-control#buscarPelicula:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgba(0, 194, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
