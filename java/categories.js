@@ -107,8 +107,7 @@
     const overlay = document.createElement('div');
     overlay.className = 'tmdb-poster-overlay';
     overlay.innerHTML = `
-      <div class="text-truncate"><strong style="font-size:.9rem">${escapeHtml(movie.title || movie.name || '')}</strong></div>
-      <div class="badge bg-dark" style="opacity:.9">${movie.vote_average ?? ''}</div>
+      <div class="badge bg-dark mt-2" style="opacity:.9"> Rating: ${movie.vote_average ?? ''}</div>
     `;
 
     const caption = document.createElement('div');

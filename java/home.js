@@ -18,7 +18,7 @@ let currentSuggestions = [];
 const maxSuggestions = 6;
 
 /* API key (ocupas reemplazar/gestionar según tu repo) */
-const apikey = 'TU_API_KEY_AQUI';
+const apikey = 'TU_OMDB_API_KEY_AQUI';
 
 /* Inicialización segura de atributos/focus */
 if (inputBuscar) {
@@ -144,7 +144,7 @@ const errorModal = (tipoError) => {
             modalTitle.textContent = 'Error desconocido';
             modalBody.textContent = 'Ocurrió un error que no pudimos identificar. Intente nuevamente.';
     }
-
+    resultados.classList.replace('d-block', 'd-none');
     modalError.show();
 };
 

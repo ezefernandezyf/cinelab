@@ -21,7 +21,7 @@
 
 <body class="fondo">
 
-  <nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top" role="navigation" aria-label="Main navigation">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary pe-5 fixed-top" role="navigation" aria-label="Main navigation">
     <div class="container-fluid position-relative">
       <a class="navbar-brand text-black" href="#">CineLab</a>
 
@@ -63,15 +63,15 @@
     <section id="view-home" class="mb-4">
       <div class="container rounded shadow-lg bg-light my-3">
         <div class="input-group p-4 position-relative">
-          <input type="text" class="form-control" placeholder="Buscar película..." id="buscarPelicula"
+          <input type="text" class="form-control rounded" placeholder="Buscar película..." id="buscarPelicula"
             aria-autocomplete="list" aria-controls="sugerencias" aria-expanded="false" />
-          <button class="btn btn-primary rounded" id="btnPelicula" type="button">Buscar</button>
+          <button class="btn btn-primary rounded ms-2" id="btnPelicula" type="button">Buscar</button>
 
           <ul class="list-group position-absolute w-100 sugerenciasEstilo" role="listbox" id="sugerencias"
             aria-hidden="true"></ul>
         </div>
 
-        <div class="rounded shadow-lg bg-light d-flex justify-content-center p-4 d-none" id="resultados"
+        <div class="rounded shadow-lg bg-light justify-content-center py-2 d-none" id="resultados"
           aria-live="polite">
         </div>
 

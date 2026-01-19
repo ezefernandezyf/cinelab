@@ -505,8 +505,9 @@
                 infoDiv.appendChild(pNote);
                 infoDiv.appendChild(synopsisSub);
                 infoDiv.appendChild(synopsisP);
-                infoDiv.appendChild(modalActions);
                 if (needsTruncate) infoDiv.appendChild(moreLink);
+                infoDiv.appendChild(modalActions);
+                
 
                 const wrapper = document.createElement('div');
                 wrapper.classList.add('d-flex', 'gap-3');
