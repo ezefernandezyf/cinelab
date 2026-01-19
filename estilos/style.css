@@ -1,4 +1,10 @@
-/* Variables de tema */
+/* ============================
+   CineLab - estilos globales
+    ============================ */
+
+/* ----------------------------
+   Variables de tema
+   ---------------------------- */
 :root {
   --bg: #001824;
   /* fondo principal */
@@ -11,37 +17,42 @@
   --muted: #8fb3c6;
   /* texto secundario */
   --accent: #00c2ff;
-  /* color de acción principal (CTA) */
+  /* color de acción principal */
   --accent-600: #005bb5;
   /* hover/acento oscuro */
   --danger: #ff6b6b;
-  /* mensajes de error / badges */
   --glass: rgba(255, 255, 255, 0.02);
   --radius: 0.5rem;
   --container-max: 1100px;
   --focus-outline: rgba(100, 150, 255, 0.9);
 }
 
-/* Tipografías */
+/* ----------------------------
+   Reset / tipografías / base
+   ---------------------------- */
+* {
+  box-sizing: border-box
+}
+
 html,
 body {
-  height: 100%;
+  height: 100%
+}
+
+html,
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Body / fondo general */
-body,
-.fondo {
-  background-color: var(--bg) !important;
+  background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  margin: 0;
   line-height: 1.45;
-  min-height: 100%;
 }
 
-/* Contenedor principal */
+/* ----------------------------
+   Contenedor principal
+   ---------------------------- */
 main.container {
   max-width: var(--container-max);
   margin-left: auto;
@@ -49,16 +60,32 @@ main.container {
   padding-inline: 1rem;
 }
 
-/* Card default (Bootstrap .card overrides) */
+/* fallback cuando navbar es fixed-top */
+main[role="main"] {
+  padding-top: calc(72px + 1rem);
+}
+
+/* ----------------------------
+   Card por defecto (sobrescribe Bootstrap cuando hace falta)
+   ---------------------------- */
 .card {
-  background: linear-gradient(180deg, var(--glass), rgba(255, 255, 255, 0.01)) !important;
+  background: linear-gradient(180deg, var(--glass), rgba(255, 255, 255, 0.01));
   border: none;
   border-radius: var(--radius);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   color: var(--text);
 }
 
-/* Texto dentro de cards */
+/* Forzar que los elementos de .card no aparezcan con fondo blanco */
+.card .bg-white,
+.card .bg-light,
+.card.bg-white,
+.card.bg-light {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+
+/* Textos dentro de cards */
 .card-title,
 .card-text,
 .card .card-body,
@@ -66,12 +93,14 @@ main.container {
   color: var(--text) !important;
 }
 
-/* Buttons */
+/* ----------------------------
+   Buttons (coherencia)
+   ---------------------------- */
 .btn-primary,
 .btn-class {
-  background-color: var(--accent) !important;
-  color: var(--accent-600) !important;
-  border: none;
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border: none !important;
   box-shadow: none;
   transition: transform 120ms ease, background-color 120ms ease;
 }
@@ -80,31 +109,26 @@ main.container {
 .btn-class:hover,
 .btn-primary:focus,
 .btn-class:focus {
-  background-color: var(--accent-600) !important;
-  color: #ffffff !important;
+  background: var(--accent-600) !important;
   transform: translateY(-1px);
+  color: #fff !important;
 }
 
-/* Button 'boton' custom */
+/* Botón genérico "boton" */
 .boton {
   background-color: #1b1919 !important;
-  color: white !important;
+  color: #fff !important;
   border-radius: 6px;
   padding: 0.45rem 0.8rem;
 }
 
-/* List hover */
-.lista:hover {
-  transform: scale(1.005);
-  transition: transform 0.18s ease-in-out, background-color 0.18s ease-in-out;
-  background-color: rgba(170, 228, 255, 0.12) !important;
-}
-
-/* Loader overlay */
+/* ----------------------------
+   Loader overlay
+   ---------------------------- */
 .fondoLoader {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity .3s ease;
   display: flex !important;
 }
 
@@ -116,26 +140,26 @@ main.container {
   z-index: 9999;
 }
 
-/* Poster image */
-.poster {
+/* ----------------------------
+   Poster (imágenes) - corregido
+   ---------------------------- */
+.poster,
+.card img {
   width: 100%;
   height: 360px;
-  max-width: 286px;
-  aspect-ratio: 286 / 352.13;
+  max-width: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
-  background: var(--surface-2e);
-  opacity: 0;
+  background: var(--surface-2);
+  opacity: 1;
+  /* aseguramos que no estén ocultas */
   transition: opacity .25s ease-in;
 }
 
-/* Texto muted personalizado */
-.text-muted-mio {
-  color: var(--muted);
-}
-
-/* Sugerencias (autocomplete) */
+/* ----------------------------
+   Sugerencias (autocomplete)
+   ---------------------------- */
 .sugerenciasEstilo {
   top: 100%;
   left: 0;
@@ -144,349 +168,31 @@ main.container {
   overflow-y: auto;
   background: var(--surface);
   border-radius: 6px;
-}
-
-/* Suggestion focus */
-.suggestion-item:focus,
-.suggestion-item:hover {
-  background-color: rgba(107, 144, 160, 0.18);
-  outline: none;
-}
-
-/* Navbar center positioning */
-.navbar .container-fluid {
-  position: relative;
-}
-
-/* Centered nav items on large screens */
-@media (min-width: 992px) {
-  .navbar .center-nav {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    align-items: center;
-    z-index: 1;
-  }
-}
-
-.center-nav>.nav-item {
-  white-space: nowrap;
-}
-
-/* Dropdown stacking context */
-.navbar .dropdown-menu {
-  z-index: 1050;
-}
-
-/* Watched card footer */
-.watched-card .card-footer {
-  display: flex;
-  gap: .5rem;
-  padding: .75rem 1rem;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
-  background: transparent;
-  border-top: 0;
-  overflow: hidden;
-}
-
-.watched-card .card-footer .btn {
-  flex: 1 1 0;
-  min-width: 75px;
-  padding: .35rem .5rem;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-/* Responsive adjustments for watched card footer */
-@media (max-width: 576px) {
-  .watched-card .card-footer {
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: .4rem;
-  }
-
-  .watched-card .card-footer .btn {
-    min-width: 0;
-    flex: 1 1 calc(33.333% - .6rem);
-  }
-}
-
-/* TMDB browse / poster card styles */
-.tmdb-scroller {
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x proximity;
-}
-
-.tmdb-poster-card {
-  scroll-snap-align: start;
-  transition: transform .18s ease, box-shadow .18s ease;
-  position: relative;
-}
-
-.tmdb-poster-card:focus,
-.tmdb-poster-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-  outline: none;
-}
-
-/* Overlay */
-.tmdb-poster-overlay {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 8px;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.15));
-  color: #fff;
-  border-radius: 6px;
-  font-size: .85rem;
-  opacity: 0;
-  transition: opacity .16s ease;
-  pointer-events: none;
-}
-
-.tmdb-poster-card:hover .tmdb-poster-overlay,
-.tmdb-poster-card:focus .tmdb-poster-overlay {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Row controls */
-.tmdb-row-controls {
-  display: flex;
-  gap: .5rem;
-  align-items: center;
-}
-
-/* Arrow button */
-.tmdb-arrow-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.tmdb-arrow-btn:active {
-  transform: scale(.98);
-}
-
-/* Responsive poster sizing */
-@media (min-width: 1200px) {
-  .tmdb-poster-card {
-    width: 180px;
-  }
-
-  .tmdb-poster-card img {
-    height: 260px;
-  }
-}
-
-@media (max-width: 576px) {
-  .tmdb-poster-card {
-    flex: 0 0 140px;
-    width: 140px;
-  }
-
-  .tmdb-poster-card img {
-    height: 200px;
-  }
-
-  .tmdb-scroller {
-    gap: 0.5rem;
-    padding-bottom: 10px;
-  }
-
-  #tmdb-toasts {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: calc(100% - 2rem);
-    bottom: 0.75rem;
-    padding: 0.5rem;
-  }
-
-  #tmdb-toasts .tmdb-toast {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-}
-
-/* Toasts: ensure high z-index so they appear above modals/backdrop */
-#tmdb-toasts {
-  z-index: 99999 !important;
-  pointer-events: auto;
-  bottom: calc(env(safe-area-inset-bottom, 0) + 1rem) !important;
-  position: fixed;
-  right: .75rem;
-  left: auto;
-  max-width: 380px;
-  padding: 0.5rem;
-}
-
-/* Toast items */
-#tmdb-toasts>.tmdb-toast {
-  margin-bottom: .5rem;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  transition: transform 260ms cubic-bezier(.2, .9, .2, 1), opacity 260ms ease;
-  transform: translateY(10px);
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-/* Visible / hiding states */
-#tmdb-toasts>.tmdb-toast.is-visible {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-#tmdb-toasts>.tmdb-toast.is-hiding {
-  transform: translateY(10px);
-  opacity: 0;
-}
-
-/* Ensure pointer events on toasts */
-#tmdb-toasts,
-#tmdb-toasts * {
-  pointer-events: auto !important;
-}
-
-/* Small accessibility tweaks */
-.tmdb-poster-card:focus,
-.tmdb-arrow-btn:focus,
-.tmdb-row-controls button:focus,
-.tmdb-toast button:focus {
-  outline: 3px solid var(--focus-outline);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-/* Skeleton shimmer (neutralized for dark theme) */
-.tmdb-skeleton-card {
-  width: 160px;
-  height: 240px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.035) 37%, rgba(255, 255, 255, 0.05) 63%);
-  background-size: 400% 100%;
-  animation: shimmer 1.2s linear infinite;
-}
-
-.tmdb-skeleton-caption {
-  width: 110px;
-  height: 12px;
-  margin-top: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -400% 0;
-  }
-
-  100% {
-    background-position: 400% 0;
-  }
-}
-
-/* Responsive tweaks */
-@media (max-width: 576px) {
-  .tmdb-skeleton-card {
-    width: 140px;
-    height: 200px;
-  }
-
-  .tmdb-skeleton-item {
-    width: 140px;
-  }
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .tmdb-skeleton-card {
-    animation: none !important;
-    background: rgba(255, 255, 255, 0.02) !important;
-  }
-
-  .tmdb-poster-card,
-  #tmdb-toasts>.tmdb-toast {
-    transition: none !important;
-    transform: none !important;
-  }
-}
-
-/* Footer/body padding adjustment when toasts present
-   updateBodyForToasts() JS should set body padding-bottom dynamically; fallback here:
-*/
-body.has-toasts {
-  padding-bottom: 6.25rem;
-  /* fallback if JS didn't run yet */
-}
-
-/* Small utilities */
-.text-muted {
-  color: var(--muted) !important;
-}
-
-.rounded-lg {
-  border-radius: calc(var(--radius) + 0.25rem) !important;
-}
-
-/* Minor: modal background custom */
-.fondoModal {
-  background-color: var(--surface-2);
-}
-
-/* Ensure cards inside sections have comfortable padding */
-.section-card {
-  padding: 1rem;
-}
-
-/* Navbar brand / title */
-/* ---------------------------
-   Navbar claro sobre fondo oscuro
-   --------------------------- */
+/* ----------------------------
+   Navbar: blanca sobre fondo oscuro
+   ---------------------------- */
 .navbar {
   background: #ffffff !important;
-  /* navbar blanca */
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 1100;
 }
 
-/* Marca y enlaces: texto oscuro para contraste sobre fondo claro */
 .navbar .navbar-brand,
 .navbar .nav-link {
   color: #001824 !important;
 }
 
-/* Active / hover state: usar accent para destacar */
 .navbar .nav-link.active,
 .navbar .nav-link:hover {
   font-weight: 600;
 }
 
-/* Mobile collapse: fondo blanco y separación interior */
-@media (max-width: 991px) {
+/* Mobile collapse */
+@media (max-width:991px) {
   .navbar .navbar-collapse {
     background: #ffffff;
     padding: 0.5rem 1rem;
@@ -497,208 +203,356 @@ body.has-toasts {
     color: #001824 !important;
     padding: 0.5rem 0.25rem;
   }
-
-  .navbar .navbar-nav .nav-item+.nav-item {
-    margin-left: 0;
-  }
 }
 
-/* Asegurar dropdown contraste sobre navbar blanco */
-.navbar .dropdown-menu {
-  background: #fff !important;
-  color: #001824 !important;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-/* Mejorar apariencia del toggler (icono de tres barras en oscuro) */
-.navbar .navbar-toggler {
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-.navbar .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(0,0,0,0.7)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
-}
-
-/* Small tweak: ensure collapsed menu items are easy to tap */
-.navbar .navbar-nav .nav-link {
-  padding: .5rem .75rem;
-  border-radius: 6px;
-}
-
-/* Ensure navbar remains above content (fixed-top) */
-.navbar.fixed-top {
-  z-index: 1100;
-}
-
-/* If you keep .navbar-brand styling global, override brand specifically for white navbar */
-.navbar .navbar-brand {
-  font-family: 'Poppins', 'Inter', sans-serif;
-  color: #001824 !important;
-}
-
-/* Accessibility: increase focus visibility for navbar items */
-.navbar .nav-link:focus,
-.navbar .navbar-brand:focus,
-.navbar .navbar-toggler:focus {
-  outline: 3px solid rgba(0, 123, 255, 0.18);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-/* Small responsive container tweak */
-@media (max-width: 768px) {
-  main.container {
-    padding-inline: 0.75rem;
-  }
-}
-
-/* End of stylesheet */
-
-/* ---------- Ajustes visuales para que quede como las capturas ---------- */
-
-/* Evitar que el contenido quede oculto por la navbar fija:
-   ponemos un padding-top en main que compense la altura de la navbar.
-   Si ya tenés un script que hace esto dinámicamente (adjustMainForNavbar),
-   este css actúa como fallback seguro.
-*/
-main[role="main"] {
-  padding-top: calc(72px + 1rem);
-  /* 72px asume navbar ~56-64px + 1rem extra */
-}
-
-/* Centrar / limitar ancho del "hero" de búsqueda */
-.section-card {
-  max-width: 820px;
-  /* ancho de la caja de búsqueda */
-  margin: 2.5rem auto;
-  /* centrado vertical / horizontal */
-  padding: 1.25rem 1.5rem;
-}
-
-/* Estética de la caja de búsqueda interna */
-.input-group {
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.input-group .form-control {
-  height: 48px;
-  border-radius: 0.375rem 0 0 0.375rem;
-  box-shadow: none;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.input-group .btn {
-  border-radius: 0 0.375rem 0.375rem 0;
-  height: 42px;
-  margin-left: .25rem;
-  padding: 0.45rem 0.85rem;
-}
-
-/* Sombra sutil para que la caja "flote" sobre el fondo oscuro */
-.section-card {
-  box-shadow: 0 18px 40px rgba(2, 10, 14, 0.55);
-}
-
-/* Resultado inicial ocupa el centro y no muestra fondo blanco */
-#resultados {
-  width: 100%;
-  max-width: 760px;
-}
-
-/* Ajustes para mobile: mantener la navbar blanca y menú legible */
-@media (max-width: 991px) {
-
-  /* El collapse ya tiene fondo blanco, hacemos el área tocable más grande */
-  .navbar .navbar-collapse {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-  }
-
-  /* Reducir padding-top para móviles si la pantalla es pequeña */
-  main[role="main"] {
-    padding-top: calc(64px + 0.75rem);
-  }
-
-  /* Caja de búsqueda más compacta en mobile */
-  .section-card {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    padding: 0.9rem;
-    max-width: calc(100% - 2.0rem);
-  }
-
-  .input-group .form-control {
-    height: 44px;
-  }
-
-  .input-group .btn {
-    height: 40px;
-    padding: 0.35rem 0.6rem;
-  }
-}
-
-/* Asegurar que el brand y navlinks con la navbar blanca se vean bien */
-.navbar .navbar-brand {
-  color: #001824 !important;
-}
-
-.navbar .nav-link {
-  color: #001824 !important;
-}
-
-/* Pequeño tweak visual para que el input y el botón no se "peguen" al borde */
-.input-group .form-control:focus {
-  box-shadow: 0 0 0 0.125rem rgba(0, 194, 255, 0.12);
-  border-color: var(--accent);
-}
-
-/* Mantener la coherencia del botón primario */
-.btn-primary {
-  background: var(--accent) !important;
-  color: #fff !important;
-  border: none;
-}
-
-/* Si querés que la tarjeta se vea un poco más "pegada" al top (menos espacio), baja margin-top */
-.section-card.tight {
-  margin-top: 1.25rem;
-}
-
-/* Ensure toasts still above everything */
+/* ----------------------------
+   Toasters
+   ---------------------------- */
 #tmdb-toasts {
+  z-index: 11000 !important;
+  pointer-events: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0) + 1rem) !important;
+  position: fixed;
   right: .75rem;
   left: auto;
+  max-width: 380px;
+  padding: 0.5rem;
 }
 
+/* ----------------------------
+   Resultados / Grid de cards
+   ---------------------------- */
+/* contenedor principal de resultados: centrado, responsive */
 
-/* Borde sutil para el input de búsqueda y estilo en foco */
-#buscarPelicula,
-.input-group .form-control#buscarPelicula {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  /* borde tenue sobre fondo oscuro */
-  background-color: rgba(255, 255, 255, 0.02);
-  /* ligera elevación visual */
-  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+.card,
+#resultados .card,
+.sections-watched-wrapper .card,
+.watched-card {
+  background: linear-gradient(180deg, rgba(8, 58, 82, 0.95), rgba(8, 46, 63, 0.95)) !important;
+  color: var(--text) !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
 }
 
-/* Para que el borde contraste mejor en pantallas claras si llegase a usarse */
-@media (prefers-color-scheme: light) {
+/* Sobrescribir cualquier bg-white/bg-light dentro de las cards */
+.card .bg-white,
+.card .bg-light,
+.card.bg-white,
+.card.bg-light,
+.section-card .bg-white,
+.section-card .bg-light {
+  background: transparent !important;
+  color: var(--text) !important;
+}
 
-  #buscarPelicula,
-  .input-group .form-control#buscarPelicula {
-    border: 2px solid rgba(0, 0, 0, 0.08);
-    background-color: #fff;
+/* Asegurar que card-body/footer sean transparentes y legibles */
+.card .card-body,
+.card .card-footer,
+#resultados .card .card-body,
+#resultados .card .card-footer,
+.watched-card .card-body,
+.watched-card .card-footer {
+  background: transparent !important;
+  color: var(--text) !important;
+  padding: 1rem !important;
+}
 
+/* 2) Navbar: centrar links por defecto (fallback si no existe .center-nav) */
+@media (min-width: 992px) {
+
+
+  .navbar .navbar-nav {
+    margin: 0 auto !important;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .navbar .container-fluid {
+    position: relative;
   }
 }
 
-/* Foco: color de acento y sombra ligera */
-#buscarPelicula:focus,
-.input-group .form-control#buscarPelicula:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 6px 18px rgba(0, 194, 255, 0.12);
-  background-color: rgba(255, 255, 255, 0.03);
+/* 3) Posters y flush image: eliminar gap superior y bordes raros */
+/* Quitamos padding del contenedor para que la imagen quede flush */
+.watched-card {
+  padding: 0 !important;
+  /* la imagen debe tocar el borde superior */
+  overflow: hidden;
+  border-radius: 10px;
 }
 
+/* Poster / image - asegurar que cubra y tenga esquinas redondeadas superiores */
+.watched-card .poster,
+.watched-card img,
+.watched-card .card-img-top,
+#resultados .poster,
+#resultados .card img {
+  display: block;
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  object-position: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* aplicar radio solo arriba para que la imagen coincida con el contenedor */
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+/* Si la imagen está dentro de .card-body, anulamos el padding superior para que no deje hueco */
+.watched-card .card-body img,
+.watched-card .card-body>.poster {
+  margin-top: 0;
+}
+
+/* Mantener card-body y footer con su propio padding después de la imagen */
+.watched-card .card-body {
+  padding: 1rem;
+  background: transparent;
+}
+
+
+
+/* limitar width de cada card y mantener centrado */
+#resultados .card,
+.sections-watched-wrapper .card {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* 5) Botones en watched: línea en desktop, wrap en mobile */
+.watched-card .card-footer {
+  display: flex !important;
+  flex-direction: row;
+  gap: .5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  /* forzamos una linea en desktop */
+  padding: .75rem 1rem;
+  background: transparent;
+  border-top: 0;
+}
+
+.watched-card .card-footer .btn {
+  flex: 0 0 auto;
+  min-width: 70px;
+  /* reduce mínimo para evitar wraps innecesarios */
+  padding: .38rem .6rem;
+  margin: 0;
+}
+
+/* En móviles permitimos apilar */
+@media (max-width: 576px) {
+  .watched-card .card-footer {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .watched-card .card-footer .btn {
+    flex: 1 1 calc(33.333% - .6rem);
+    min-width: 0;
+  }
+
+  /* posters más pequeños en mobile */
+  .watched-card .poster,
+  #resultados .poster,
+  .card img {
+    height: 380px !important;
+  }
+
+  #resultados {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    padding: .75rem;
+  }
+}
+
+/* 6) Contraste extra para títulos / metadatos (por si alguna regla fuerte los baja) */
+#resultados .card .card-title,
+#resultados .card .card-text,
+.watched-card .card-title,
+.watched-card .card-text {
+  color: var(--text) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* 7) Por si hay reglas inline o con más especificidad, damos un fallback más específico */
+main.container #resultados .card,
+main.container .sections-watched-wrapper .card,
+body .watched-card {
+  background: linear-gradient(180deg, rgba(8, 58, 82, 0.98), rgba(8, 46, 63, 0.98)) !important;
+  color: var(--text) !important;
+}
+
+/* ---------- Modales & alerts: tema oscuro y texto legible ---------- */
+
+/* Fondo del backdrop: más oscuro y semitransparente */
+.modal-backdrop {
+  background-color: rgba(0, 10, 18, 0.7) !important;
+}
+
+/* Modal dialog centrar y asegurar stacking */
+.modal {
+  z-index: 12000;
+  /* por encima de la mayoría de toasts */
+}
+
+/* Contenido del modal: fondo oscuro coherente con el theme */
+.modal .modal-content,
+.modal-content {
+  background: linear-gradient(180deg, rgba(8, 46, 63, 0.98), rgba(6, 36, 50, 0.98)) !important;
+  color: var(--text) !important;
+  border: 0 !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+  border-radius: calc(var(--radius) + 0.25rem) !important;
+}
+
+/* Modal header, body y footer: fondos transparentes y texto legible */
+.modal .modal-header,
+.modal .modal-body,
+.modal .modal-footer,
+.modal-header,
+.modal-body,
+.modal-footer {
+  background: transparent !important;
+  color: var(--text) !important;
+  padding: 1rem 1.25rem !important;
+}
+
+/* Título del modal más visible */
+.modal .modal-title,
+.modal-title {
+  color: var(--text) !important;
+  font-weight: 700;
+}
+
+.tmdb-scroller .tmdb-poster-card,
+.tmdb-scroller .tmdb-poster-card>.card,
+.tmdb-row .tmdb-poster-card,
+.tmdb-row .tmdb-poster-card>.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  border-radius: 8px;
+  padding: 0.35rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  overflow: hidden;
+}
+
+
+.tmdb-scroller .tmdb-poster-card img,
+.tmdb-poster-card>img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+
+.section-categories .tmdb-poster-card,
+.section-card.tmdb .tmdb-poster-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+}
+
+
+.tmdb-scroller,
+.tmdb-row,
+.row-scroller {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  /* <-- elimina la barra vertical */
+  -webkit-overflow-scrolling: touch;
+  max-height: none !important;
+  /* evitar que alguna regla imponga altura y provoque scroll */
+  padding-bottom: 0.5rem;
+  /* espacio para el thumb horizontal si aparece */
+}
+
+/* 3) Si aparece un scrollbar extra por un elemento interno alto, forzar que los items no crezcan */
+.tmdb-scroller .tmdb-poster-card,
+.tmdb-row .tmdb-poster-card {
+  align-self: start;
+  /* evitar que los items estiren el contenedor */
+  max-height: none;
+}
+
+.tmdb-arrow-btn {
+
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  border: 0.5px solid rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 5
+
+}
+
+.tmdb-arrow-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+}
+
+.tmdb-arrow-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+}
+
+.tmdb-arrow-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 194, 255, 0.12), 0 8px 24px rgba(0,0,0,0.45);
+  border-color: var(--accent);
+}
+
+.tmdb-arrow-btn.sm {
+  --size: 34px;
+}
+
+@media (max-width: 576px) {
+  .tmdb-arrow-btn {
+    --size: 44px;
+  }
+}
+
+.tmdb-arrow-btn span {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  color: currentColor;
+  transform: translateY(-1px);
+}
+
+
+/* 4) Estética del scrollbar (opcional, para que sea menos invasivo) */
+.tmdb-scroller::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tmdb-scroller::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.tmdb-scroller::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+}
+
+.tmdb-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.06) rgba(255, 255, 255, 0.02);
+}
