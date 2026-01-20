@@ -8,6 +8,8 @@ node_modules/
 # Variables de entorno / claves (no subirlas)
 .env
 *.env
+.env.local
+.env.*.local
 
 # IDEs / editores
 .vscode/
@@ -31,7 +33,14 @@ build/
 # Archivos temporales del SO / editor
 *.swp
 *~
-.cache
 
-# Otros
+
+# Otros / archivos locales con claves
+java/config.js
+
+
+# Coverage / tests
 coverage/
+
+# Files to exclude from packaging
+coverage/java/config.js
