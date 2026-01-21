@@ -18,8 +18,6 @@
             historialEl.classList.remove('d-none');
             historialEl.classList.add('list-group', 'my-4');
 
-            // header dentro del contenedor (estético)
-
 
             historialStorage.forEach(titulo => {
                 const itemHistorial = document.createElement('button');
@@ -59,24 +57,29 @@
         if (!btn || !historialEl.contains(btn)) return;
 
         if (btn.dataset.action === 'borrar-historial') {
-            localStorage.removeItem('historialBusquedas');
+            try {
+                if (typeof actualizarHistorialEnStorage === 'function') {
+                    actualizarHistorialEnStorage([]);
+                } else {
+                    localStorage.removeItem('historialBusquedas');
+                }
+            } catch (e) {
+                try { localStorage.removeItem('historialBusquedas'); } catch (ee) { }
+            }
             historialEl.innerHTML = '';
             state.historial = [];
             state.busquedaActual = null;
             historialEl.classList.add('d-none');
-            // optionally navigate back to home or clear other UI; leave that to page consumer
             return;
         }
 
         const titulo = (btn.dataset.titulo || btn.textContent).trim();
         if (!titulo) return;
         // Intentamos enviar al buscador en la página principal si existe; si no, solo hacemos una búsqueda local
-        // Si la página actual tiene inputBuscar (index.html), intentamos rellenarlo y disparar búsqueda.
         const inputOnPage = document.getElementById('buscarPelicula');
         if (inputOnPage) {
             inputOnPage.value = titulo;
             if (typeof window.buscarPelicula === 'function') {
-                // si existe la función global, úsala
                 window.buscarPelicula();
             } else if (typeof window.obtenerPeliculas === 'function') {
                 window.obtenerPeliculas(titulo);
@@ -88,10 +91,21 @@
         // En caso de que no haya buscador en esta página, simplemente actualizar state y (opcional) mostrar algo
         try {
             localStorage.setItem('tmdb.navigateSearch', titulo);
-            // Usa una ruta relativa a tu estructura; aquí asumo index.html en la raíz
-            window.location.href = '../index.html';
+            // Navegar de forma robusta: intentar raíz relativa (index.html) y como fallback ../index.html
+            const tryNavigate = () => {
+                try {
+                    window.location.href = '../index.html';
+                } catch (e) {
+                    try {
+                        window.location.href = 'index.html';
+                    } catch (ee) {
+         
+                        window.location.href = '/';
+                    }
+                }
+            };
+            tryNavigate();
         } catch (e) {
-            // Fallback: si algo falla, simplemente actualizar el state localmente
             state.busquedaActual = titulo;
         }
     }

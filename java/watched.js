@@ -2,7 +2,6 @@
     const watchedList = document.getElementById('watched-movies');
     if (!watchedList) return;
 
-
     const detailsModalEl = document.getElementById('modalMovieDetails');
     const detailsModal = (typeof bootstrap !== 'undefined' && detailsModalEl) ? new bootstrap.Modal(detailsModalEl) : null;
     const detailsModalBody = detailsModalEl ? detailsModalEl.querySelector('.modal-body') : null;
@@ -21,9 +20,7 @@
 
     const TOAST_UNDO_TIMEOUT = 6000;
     let pendingDeleteId = null;
-    const OMDB_API_KEY = 'TU_API_KEY_AQUI';
     let activeDetailsMovieId = null;
-
 
     if (confirmDeleteBtn && !confirmDeleteBtn.dataset.handlerAttached) {
         confirmDeleteBtn.dataset.handlerAttached = 'true';
@@ -67,13 +64,12 @@
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 gap: '0.5rem',
-                zIndex: String(2147483647), 
-                pointerEvents: 'none' 
+                zIndex: String(2147483647),
+                pointerEvents: 'none'
             });
             document.body.appendChild(container);
         }
 
-        // helper para escapar texto (por seguridad)
         const escapeHtmlLocal = (str) => {
             return String(str || '').replace(/[&<>"'`=\/]/g, s => {
                 const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' };
@@ -92,7 +88,7 @@
             alignItems: 'center',
             gap: '0.5rem',
             minWidth: '260px',
-            pointerEvents: 'auto' 
+            pointerEvents: 'auto'
         });
 
         const textDiv = document.createElement('div');
@@ -130,7 +126,6 @@
         toastEl.appendChild(closeBtn);
         container.appendChild(toastEl);
 
-
         const handleUndo = () => {
             try {
                 const watched = getWatched();
@@ -148,7 +143,6 @@
 
         const cleanup = () => {
             try { toastEl.remove(); } catch (e) { /* ignore */ }
-            // si el contenedor queda vacío, opcionalmente lo podés quitar
             if (container && container.children.length === 0) {
                 try { container.remove(); } catch (e) { /* ignore */ }
             }
@@ -157,23 +151,16 @@
         undoBtn.addEventListener('click', handleUndo);
         closeBtn.addEventListener('click', cleanup);
 
-        // auto‑close (sin undo) tras TOAST_UNDO_TIMEOUT
         const timeoutId = setTimeout(() => {
             cleanup();
         }, TOAST_UNDO_TIMEOUT);
 
-        // si el usuario pulsa undo o close, limpiamos el timeout
         const clearAll = () => clearTimeout(timeoutId);
         undoBtn.addEventListener('click', clearAll);
         closeBtn.addEventListener('click', clearAll);
     }
 
-
-
-
-
     const renderWatchedMovies = () => {
-
         const movies = getWatched();
         if (movies.length === 0) {
             watchedList.innerHTML = '<p class="text-light">No has marcado ninguna película como vista.</p>';
@@ -190,7 +177,7 @@
             movieImagen.classList.add('card-img-top', 'poster', 'pt-3');
             movieImagen.loading = 'lazy';
             movieImagen.decoding = 'async';
-            movieImagen.alt = `Poster de ${movie.Title} la película`;
+            movieImagen.alt = `Poster de ${movie.Title || movie.title} la película`;
             const posterSrc = (movie.poster && movie.poster !== 'N/A') ? String(movie.poster).trim() : '../assets/placeholder.png';
             movieImagen.src = posterSrc;
 
@@ -202,7 +189,6 @@
                 movieImagen.onerror = null;
                 movieImagen.src = '../assets/placeholder.png';
             };
-
 
             const cardBody = document.createElement('div');
             cardBody.classList.add('card-body', 'flex-grow-1');
@@ -217,18 +203,17 @@
 
             const viewedAt = document.createElement('p');
             viewedAt.classList.add('card-text', 'text-center', 'mb-2');
-            const viewedDate = new Date(movie.viewedAt) ? new Date(movie.viewedAt) : 'Fecha desconocida';
-            viewedAt.textContent = `Visto el: ${viewedDate.toLocaleDateString()}`;
+            const viewedDate = movie.viewedAt ? new Date(movie.viewedAt) : null;
+            viewedAt.textContent = `Visto el: ${viewedDate ? viewedDate.toLocaleDateString() : 'Fecha desconocida'}`;
 
             const cardFooter = document.createElement('div');
             cardFooter.classList.add('card-footer', 'mt-auto', 'd-flex', 'flex-wrap', 'justify-content-center', 'gap-2', 'p-3');
-
 
             const btnEliminar = document.createElement('button');
             btnEliminar.classList.add('btn', 'btn-danger');
             btnEliminar.textContent = 'Eliminar';
             btnEliminar.setAttribute('type', 'button');
-            btnEliminar.setAttribute('aria-pressed', 'false')
+            btnEliminar.setAttribute('aria-pressed', 'false');
             btnEliminar.dataset.id = movie.id;
             btnEliminar.setAttribute('aria-label', 'Eliminar ' + movie.title + ' de películas vistas');
             btnEliminar.setAttribute('data-action', 'delete');
@@ -237,7 +222,7 @@
             btnEditar.classList.add('btn', 'btn-secondary');
             btnEditar.textContent = 'Editar';
             btnEditar.setAttribute('type', 'button');
-            btnEditar.setAttribute('aria-pressed', 'false')
+            btnEditar.setAttribute('aria-pressed', 'false');
             btnEditar.dataset.id = movie.id;
             btnEditar.setAttribute('aria-label', 'Editar detalles de ' + movie.title);
             btnEditar.setAttribute('data-action', 'edit');
@@ -246,7 +231,7 @@
             btnDetalles.classList.add('btn', 'btn-primary');
             btnDetalles.textContent = 'Detalles';
             btnDetalles.setAttribute('type', 'button');
-            btnDetalles.setAttribute('aria-pressed', 'false')
+            btnDetalles.setAttribute('aria-pressed', 'false');
             btnDetalles.dataset.id = movie.id;
             btnDetalles.setAttribute('aria-label', `Ver detalles de ${movie.title}`);
             btnDetalles.setAttribute('data-action', 'details');
@@ -264,7 +249,6 @@
             movieCard.appendChild(cardFooter);
 
             watchedList.appendChild(movieCard);
-
         });
     };
 
@@ -283,7 +267,6 @@
             if (confirmDeleteBodyEl) confirmDeleteBodyEl.textContent = '¿Estás seguro de que quieres eliminar esta película de tu lista de vistas?';
             if (confirmDeleteModal) confirmDeleteModal.show();
             return;
-
         }
 
         if (action === 'details') {
@@ -297,10 +280,9 @@
                 detailsModalBody.innerHTML = '';
                 let synopsis = '';
 
-                if (movie.sourceData) { synopsis = movie.sourceData.Plot || movie.sourceData.plot || movie.sourceData.Overview || movie.sourceData.overview || ''; }
+                if (movie.sourceData) { synopsis = movie.sourceData.Plot || movie.sourceData.plot || movie.sourceData.Overview || movie.sourceData.overview || movie.sourceData.raw?.overview || ''; }
                 synopsis = synopsis || movie.Plot || movie.plot || movie.overview || movie.summary || '';
                 synopsis = (typeof synopsis === 'string') ? synopsis.trim() : '';
-                const synopsisNormal = synopsis
                 const maxPreviewLength = 300;
                 let previewText = '';
                 let needsTruncate = false;
@@ -308,8 +290,7 @@
                     if (synopsis.length > maxPreviewLength) {
                         previewText = synopsis.slice(0, maxPreviewLength) + '…';
                         needsTruncate = true;
-                    }
-                    else {
+                    } else {
                         previewText = synopsis;
                         needsTruncate = false;
                     }
@@ -344,37 +325,30 @@
                 synopsisSub.textContent = 'Sinopsis:';
                 const synopsisP = document.createElement('p');
                 synopsisP.textContent = previewText || 'No hay sinopsis disponible.';
-                // --- reemplazar desde 'let moreLink;' hasta el append del enlace ---
-                let moreLink;
 
-                // decidir si creamos enlace:
-                // - si needsTruncate === true => tenemos preview y queremos toggle
-                // - else si no hay synopsis pero movie.id es imdb => creamos link para fetch-on-demand
+                let moreLink;
                 const isImdbId = typeof movie.id === 'string' && /^tt\d+$/i.test(movie.id);
-                const shouldCreateLink = needsTruncate || (!synopsis && isImdbId);
+                const isTmdbIdPrefixed = typeof movie.id === 'string' && movie.id.startsWith('tmdb:');
+                const tmdbNumericId = isTmdbIdPrefixed ? Number(movie.id.split(':')[1]) : (Number(movie.id) || null);
+                const shouldCreateLink = needsTruncate || (!synopsis && (isImdbId || isTmdbIdPrefixed || (tmdbNumericId && !isNaN(tmdbNumericId))));
 
                 if (shouldCreateLink) {
                     moreLink = document.createElement('a');
                     moreLink.href = '#';
-                    // texto inicial: si hay preview usamos "Leer más", si no hay sinopsis usamos "Leer sinopsis"
                     moreLink.textContent = needsTruncate ? ' Leer más' : ' Leer sinopsis';
                     moreLink.setAttribute('aria-label', `Leer más sobre la sinopsis de ${movie.title}`);
-                    moreLink.dataset.expanded = 'false'; // 'true' cuando está expandido
+                    moreLink.dataset.expanded = 'false';
                     moreLink.dataset.loading = 'false';
                     moreLink.classList.add('btn', 'btn-link', 'p-0');
 
-                    // click handler combina toggle (si hay sinopsis) y fetch-on-demand (si no la hay)
                     moreLink.addEventListener('click', (event) => {
                         event.preventDefault();
-
-                        // si ya estamos en proceso de carga, ignorar clicks
                         if (moreLink.dataset.loading === 'true') return;
 
-                        // Caso A: ya tenemos sinopsis local -> toggle preview/full
                         if (synopsis && synopsis.length > 0) {
                             const expanded = moreLink.dataset.expanded === 'true';
                             if (!expanded) {
-                                synopsisP.textContent = synopsis; // mostrar completa
+                                synopsisP.textContent = synopsis;
                                 moreLink.textContent = ' Mostrar menos';
                                 moreLink.dataset.expanded = 'true';
                                 moreLink.setAttribute('aria-label', `Mostrar menos sobre la sinopsis de ${movie.title}`);
@@ -387,15 +361,13 @@
                             return;
                         }
 
-                        // Caso B: no hay sinopsis local -> hacemos fetch on-demand (solo si es imdb id)
-                        if (!isImdbId) {
-                            // no podemos obtener sinopsis automáticamente
+                        // Caso: no tenemos sinopsis -> fetch on demand usando TMDB
+                        if (!window.TMDBApi || typeof window.TMDBApi.findByExternalId !== 'function') {
                             synopsisP.textContent = 'Sinopsis no disponible.';
                             moreLink.style.display = 'none';
                             return;
                         }
 
-                        // UI: marcar loading
                         moreLink.dataset.loading = 'true';
                         moreLink.classList.add('disabled');
                         moreLink.setAttribute('aria-disabled', 'true');
@@ -403,69 +375,69 @@
                         const prevText = synopsisP.textContent;
                         synopsisP.textContent = 'Cargando sinopsis…';
 
-                        // llamar al helper (fetchSynopsis) que retorna Promise<string|null>
-                        fetchSynopsis(movie.id)
-                            .then((plot) => {
-                                // si el modal ya cambió a otra película o se cerró, no actualizamos UI
-                                if (activeDetailsMovieId !== movie.id || !detailsModalEl || !detailsModalEl.isConnected) return;
+                        // Flow: si movie.id tiene formato tmdb:<id> -> getMovieById
+                        // else if movie.id is an imdb id (ttxxxx) -> findByExternalId(imdb, 'imdb_id') -> getMovieById
+                        const tryFetchSynopsis = async () => {
+                            try {
+                                let tmdbMovie = null;
+                                if (isTmdbIdPrefixed && tmdbNumericId) {
+                                    tmdbMovie = await window.TMDBApi.getMovieById(tmdbNumericId);
+                                } else if (isImdbId) {
+                                    // TMDB find endpoint
+                                    tmdbMovie = await window.TMDBApi.findByExternalId(movie.id.replace(/^tt/i, ''), 'imdb_id');
+                                    // note: findByExternalId implementation expects the external id without 'tt' or with it?
+                                    // The TMDB find endpoint expects the external_id value, including the 'tt' prefix. We'll try with and without:
+                                    if (!tmdbMovie) {
+                                        tmdbMovie = await window.TMDBApi.findByExternalId(movie.id, 'imdb_id');
+                                    }
+                                } else if (tmdbNumericId) {
+                                    tmdbMovie = await window.TMDBApi.getMovieById(tmdbNumericId);
+                                }
 
-                                if (!plot) {
-                                    // OMDb devolvió no disponible
+                                if (!tmdbMovie || !tmdbMovie.overview) {
                                     synopsisP.textContent = 'Sinopsis no disponible.';
-                                    // guardado en cache ya fue hecho por fetchSynopsis (''), ocultamos el enlace
                                     moreLink.style.display = 'none';
                                     return;
                                 }
 
-                                // persistir en el objeto y en storage
+                                const plot = String(tmdbMovie.overview).trim();
+                                // persistir en movie.sourceData.Plot para no volver a fetch
                                 movie.sourceData = movie.sourceData || {};
                                 movie.sourceData.Plot = plot;
+
                                 try {
-                                    const existingPlot = movie.sourceData?.Plot?.trim() || '';
-                                    if (plot && plot !== existingPlot) {
-                                        const newSource = Object.assign({}, movie.sourceData || {}, { Plot: plot });
-                                        updateWatched(movie.id, { sourceData: newSource });
-                                    }
                                     updateWatched(movie.id, { sourceData: movie.sourceData });
                                 } catch (err) {
-                                    // si updateWatched lanza o re-renderiza inmediatamente, no fallamos aquí
                                     console.warn('updateWatched failed while persisting plot', err);
                                 }
 
-                                // actualizar variables locales y UI
                                 synopsis = plot;
                                 previewText = (plot.length > maxPreviewLength) ? (plot.slice(0, maxPreviewLength) + '…') : plot;
                                 needsTruncate = plot.length > maxPreviewLength;
 
-                                // Mostrar la sinopsis completa inmediatamente y ajustar el texto del enlace
                                 synopsisP.textContent = plot;
                                 if (needsTruncate) {
                                     moreLink.textContent = ' Mostrar menos';
                                     moreLink.dataset.expanded = 'true';
                                     moreLink.setAttribute('aria-label', `Mostrar menos sobre la sinopsis de ${movie.title}`);
                                 } else {
-                                    // si no hay truncado, podemos ocultar o cambiar el link; aquí lo ocultamos
                                     moreLink.style.display = 'none';
                                 }
-                            })
-                            .catch((err) => {
+                            } catch (err) {
                                 console.error('Error fetching synopsis for', movie.id, err);
                                 if (activeDetailsMovieId !== movie.id || !detailsModalEl || !detailsModalEl.isConnected) return;
                                 synopsisP.textContent = 'Error al obtener sinopsis. Reintenta.';
-                            })
-                            .finally(() => {
-                                // reactivar el enlace para permitir reintento (si decide mantenerse visible)
+                            } finally {
                                 moreLink.dataset.loading = 'false';
                                 moreLink.classList.remove('disabled');
                                 moreLink.removeAttribute('aria-disabled');
                                 moreLink.style.pointerEvents = '';
-                            });
+                            }
+                        };
+
+                        tryFetchSynopsis();
                     });
                 }
-
-
-
-
 
                 if (detailsModalEl && !detailsModalEl.dataset.detailsHandlerAttached) {
                     detailsModalEl.dataset.detailsHandlerAttached = 'true';
@@ -476,7 +448,6 @@
                 const modalActions = document.createElement('div');
                 modalActions.classList.add('d-flex', 'gap-2', 'mt-2', 'justify-content-center');
 
-                // Edit button
                 const btnModalEdit = document.createElement('button');
                 btnModalEdit.type = 'button';
                 btnModalEdit.classList.add('btn', 'btn-secondary');
@@ -485,7 +456,6 @@
                 btnModalEdit.dataset.id = movie.id;
                 btnModalEdit.setAttribute('aria-label', `Editar ${movie.title}`);
 
-                // Delete button
                 const btnModalDelete = document.createElement('button');
                 btnModalDelete.type = 'button';
                 btnModalDelete.classList.add('btn', 'btn-danger');
@@ -497,17 +467,14 @@
                 modalActions.appendChild(btnModalEdit);
                 modalActions.appendChild(btnModalDelete);
 
-
-
                 infoDiv.appendChild(tituloInfo);
                 infoDiv.appendChild(pInfo);
                 infoDiv.appendChild(pRating);
                 infoDiv.appendChild(pNote);
                 infoDiv.appendChild(synopsisSub);
                 infoDiv.appendChild(synopsisP);
-                if (needsTruncate) infoDiv.appendChild(moreLink);
+                if (shouldCreateLink && moreLink) infoDiv.appendChild(moreLink);
                 infoDiv.appendChild(modalActions);
-                
 
                 const wrapper = document.createElement('div');
                 wrapper.classList.add('d-flex', 'gap-3');
@@ -517,8 +484,6 @@
                 detailsModalBody.appendChild(wrapper);
                 activeDetailsMovieId = movie.id;
                 detailsModal.show();
-
-
             } else {
                 alert(`${movie.title} \nAño: ${movie.year} \nVisto: ${movie.viewedAt ? new Date(movie.viewedAt).toLocaleString() : '—'} \nRating: ${movie.rating == null ? '—' : movie.rating} \nNota: ${movie.note || '—'} `);
             }
@@ -544,56 +509,83 @@
                 updateWatched(movie.id, patch);
                 renderWatchedMovies();
             }
-
         }
+    }
 
-    };
-
+    // pendingSynopsisRequests, synopsisCache kept if you need per-session cache:
     const pendingSynopsisRequests = new Map();
     const synopsisCache = new Map();
 
-    function fetchSynopsis(imdbID) {
-        if (!imdbID) return Promise.resolve(null);
+    // NOTE: fetchSynopsis now uses TMDBApi when possible (findByExternalId + getMovieById)
+    function fetchSynopsis(externalId) {
+        if (!externalId) return Promise.resolve(null);
 
-        if (synopsisCache.has(imdbID)) {
-            const cached = synopsisCache.get(imdbID);
+        // cache key as provided id string
+        if (synopsisCache.has(externalId)) {
+            const cached = synopsisCache.get(externalId);
             return Promise.resolve(cached === '' ? null : cached);
         }
 
-        if (pendingSynopsisRequests.has(imdbID)) {
-            return pendingSynopsisRequests.get(imdbID);
+        if (pendingSynopsisRequests.has(externalId)) {
+            return pendingSynopsisRequests.get(externalId);
         }
 
-        const url = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${imdbID}&plot=full`;
-        const p = fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error('Network error');
-                return response.json();
-            })
-            .then(data => {
-                if (!data || data.Response === 'False' || !data.Plot || data.Plot === 'N/A') {
+        const p = (async () => {
+            try {
+                // prefer using TMDBApi
+                if (window.TMDBApi) {
+                    // case: stored id may be "tmdb:1234" or "tt1234567" or plain numeric
+                    let tmdbId = null;
+                    if (typeof externalId === 'string' && externalId.startsWith('tmdb:')) {
+                        tmdbId = Number(externalId.split(':')[1]);
+                    } else if (typeof externalId === 'string' && /^tt\d+$/i.test(externalId)) {
+                        // use findByExternalId with imdb id
+                        try {
+                            const found = await window.TMDBApi.findByExternalId(externalId, 'imdb_id');
+                            if (found && found.tmdb_id) tmdbId = found.tmdb_id;
+                        } catch (e) {
+                            // try without trimming
+                            try {
+                                const found2 = await window.TMDBApi.findByExternalId(externalId.replace(/^tt/i, ''), 'imdb_id');
+                                if (found2 && found2.tmdb_id) tmdbId = found2.tmdb_id;
+                            } catch (e2) { /* ignore */ }
+                        }
+                    } else if (!isNaN(Number(externalId))) {
+                        tmdbId = Number(externalId);
+                    }
 
-                    synopsisCache.set(imdbID, '');
-                    return null;
+                    if (tmdbId) {
+                        try {
+                            const movie = await window.TMDBApi.getMovieById(tmdbId);
+                            if (movie && movie.overview) {
+                                synopsisCache.set(externalId, movie.overview);
+                                return movie.overview;
+                            } else {
+                                synopsisCache.set(externalId, '');
+                                return null;
+                            }
+                        } catch (err) {
+                            console.warn('TMDB getMovieById failed for', tmdbId, err);
+                            // continue to return null
+                        }
+                    }
                 }
-                const plot = String(data.Plot).trim();
-                synopsisCache.set(imdbID, plot);
-                return plot;
-            })
-            .catch(err => {
 
+                // Fallback: no TMDB or no mapping -> return null
+                synopsisCache.set(externalId, '');
+                return null;
+            } catch (err) {
                 console.error('fetchSynopsis error', err);
-                throw err;
-            })
-            .finally(() => {
-                pendingSynopsisRequests.delete(imdbID);
-            });
+                synopsisCache.set(externalId, '');
+                return null;
+            } finally {
+                pendingSynopsisRequests.delete(externalId);
+            }
+        })();
 
-        pendingSynopsisRequests.set(imdbID, p);
+        pendingSynopsisRequests.set(externalId, p);
         return p;
     }
-
-
 
     function handleEditSubmit(e) {
         e.preventDefault();
@@ -626,10 +618,3 @@
 
     renderWatchedMovies();
 })();
-
-
-
-
-
-
-// Finalmente, el lugar donde antes usabas confirm(...) (o cuando el usuario pulsa eliminar desde el modal),
