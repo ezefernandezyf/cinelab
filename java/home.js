@@ -69,19 +69,13 @@ const mostrarResultados = (peliculaEncontradaRaw) => {
     imagen.alt = `Poster de ${peliculaEncontrada.Title} la película`;
     imagen.src = posterSrc;
 
-    imagen.onload = () => {
-        imagen.style.opacity = '1';
-    };
-
-    imagen.onerror = () => {
-        imagen.onerror = null;
-        imagen.src = placeHolderSrc;
-    };
+    imagen.onload = () => { imagen.style.opacity = '1'; };
+    imagen.onerror = () => { imagen.onerror = null; imagen.src = placeHolderSrc; };
 
     card.appendChild(imagen);
 
     const cardBody = document.createElement('div');
-    cardBody.classList.add('card-body');
+    cardBody.classList.add('card-body', 'd-flex', 'flex-column', 'flex-grow-1');
 
     const titulo = document.createElement('h5');
     titulo.classList.add('card-title');
@@ -93,11 +87,20 @@ const mostrarResultados = (peliculaEncontradaRaw) => {
     let trimmedYear = raw ? String(raw).trim() : null;
     descripcion.textContent = `Año: ${trimmedYear || 'Año desconocido'}`;
 
+    cardBody.appendChild(titulo);
+    cardBody.appendChild(descripcion);
+    card.appendChild(cardBody);
+
+    const cardFooter = document.createElement('div');
+    cardFooter.classList.add('card-footer', 'd-flex', 'justify-content-end', 'pt-2');
+
     const btnWatched = document.createElement('button');
-    btnWatched.classList.add('btn', 'btn-success', 'mt-2');
+    btnWatched.classList.add('btn', 'btn-success');
     btnWatched.textContent = 'Marcar como vista';
     btnWatched.setAttribute('type', 'button');
-    btnWatched.setAttribute('aria-pressed', 'false')
+    btnWatched.setAttribute('aria-pressed', 'false');
+
+    // dataset.movie: mantiene el objeto raw que usa handlerWatchedButton
     btnWatched.dataset.movie = JSON.stringify({
         ...peliculaEncontrada._raw,
         _normalized: {
@@ -107,24 +110,53 @@ const mostrarResultados = (peliculaEncontradaRaw) => {
             imdbID: peliculaEncontrada.imdbID
         }
     });
-    btnWatched.dataset.action = 'mark-watched'
+    btnWatched.dataset.action = 'mark-watched';
 
-    btnWatched.addEventListener('click', handlerWatchedButton);
 
-    const checkId = peliculaEncontrada.imdbID ? String(peliculaEncontrada.imdbID).trim() : `${String(peliculaEncontrada.Title || '').trim()}::${String(peliculaEncontrada.Year || '').trim()}`
-    const index = getWatched().findIndex(i => i.id === checkId);
-    if (index !== -1) {
-        btnWatched.textContent = 'Ya vista';
-        btnWatched.classList.replace('btn-success', 'btn-secondary');
-        btnWatched.setAttribute('aria-pressed', 'true')
-        btnWatched.setAttribute('disabled', 'true');
+
+    // obtener identificadores desde el objeto normalizado y desde el raw
+    const idsFromNormalized = getMovieIdentifiersFromRaw(peliculaEncontrada);
+    const idsFromRaw = getMovieIdentifiersFromRaw(peliculaEncontrada._raw || peliculaEncontrada);
+
+    // DEBUG: mostrar ids que usa mostrarResultados
+    console.log('[DBG mostrarResultados] raw:', peliculaEncontrada._raw);
+    console.log('[DBG mostrarResultados] ids:', getMovieIdentifiersFromRaw(peliculaEncontrada._raw || peliculaEncontrada));
+
+    // decide canonical preferido (si alguno coincide con watched)
+    const canonicalId = idsFromRaw.canonicalId || idsFromNormalized.canonicalId;
+
+    if (canonicalId) {
+        btnWatched.dataset.movieId = canonicalId;
     }
+    if (idsFromRaw.imdbId) btnWatched.dataset.movieImdb = idsFromRaw.imdbId;
+    if (idsFromRaw.tmdbId) btnWatched.dataset.movieTmdb = idsFromRaw.tmdbId;
 
-    cardBody.appendChild(btnWatched);
-    cardBody.appendChild(titulo);
-    cardBody.appendChild(descripcion);
+    // init state: usa la versión robusta que compara todas las variantes
+    try {
+        if (isMovieWatchedByRaw(peliculaEncontrada._raw || peliculaEncontrada) || isMovieWatchedByRaw(peliculaEncontrada)) {
+            btnWatched.textContent = 'Ya vista';
+            btnWatched.classList.replace('btn-success', 'btn-secondary');
+            btnWatched.setAttribute('aria-pressed', 'true');
+            btnWatched.disabled = true;
+            btnWatched.dataset.watched = 'true';
+        }
+    } catch (e) { /* ignore */ }
 
-    card.appendChild(cardBody);
+
+    // attach click — only call handlerWatchedButton; handler will update cache + all buttons
+    btnWatched.addEventListener('click', (ev) => {
+        try {
+            if (typeof handlerWatchedButton === 'function') {
+                handlerWatchedButton(ev);
+            }
+            // No setTimeout here: handlerWatchedButton will update all buttons synchronously
+        } catch (e) {
+            console.warn('handlerWatchedButton error', e);
+        }
+    });
+
+    cardFooter.appendChild(btnWatched);
+    card.appendChild(cardFooter);
 
     resultados.appendChild(card);
 };
@@ -186,6 +218,7 @@ const handlerWatchedButton = (event) => {
     event.preventDefault();
     const btn = event.target.closest('button');
     if (!btn || btn.type !== 'button') return;
+    // disable early to avoid double clicks
     btn.disabled = true;
 
     let movie = null;
@@ -197,6 +230,7 @@ const handlerWatchedButton = (event) => {
         }
     }
 
+    // si no tenemos movie en data, intentar fallback a variable global
     if (!movie && typeof peliculaEncontrada !== 'undefined') {
         movie = peliculaEncontrada;
     }
@@ -207,16 +241,23 @@ const handlerWatchedButton = (event) => {
         return;
     }
 
+    // si ya está marcada evitamos hacer nada
     if (btn.dataset.watched === 'true') {
         btn.disabled = true;
         return;
     }
 
-    if (btn.textContent === 'Marcar como vista') {
-        const imdbId = movie.imdbID ? String(movie.imdbID).trim() : '';
+    if (btn.textContent === 'Marcar como vista' || btn.textContent.toLowerCase().includes('marcar')) {
+        // obtener ids disponibles
+        const idsFromMovie = getMovieIdentifiersFromRaw(movie._raw || movie);
+
+        // canonical id to persist (prefer imdb, then tmdb, then title::year)
+        const idWatched = idsFromMovie.canonicalId || (movie.imdbID ? String(movie.imdbID).trim() : null) ||
+            (movie.tmdb_id ? `tmdb:${movie.tmdb_id}` : null) ||
+            `${String(movie.Title || movie.title || '').trim()}::${String(movie.Year || movie.year || '').trim()}`;
+
         const title = String(movie.Title || movie.title || '').trim();
         const year = String(movie.Year || movie.year || '').trim();
-        const idWatched = imdbId || `${title}::${year}`;
 
         const posterRaw = movie.Poster || movie.poster || '';
         const posterWatched = (posterRaw && posterRaw !== 'N/A') ? String(posterRaw).trim() : './assets/placeholder.png';
@@ -232,28 +273,77 @@ const handlerWatchedButton = (event) => {
             sourceData: movie
         };
 
-
         try {
-            addWatched(watchedItem);
 
-            btn.textContent = 'Ya vista';
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-secondary');
-            btn.setAttribute('aria-pressed', 'true');
-            btn.dataset.watched = 'true';
-            btn.disabled = true;
+            if (typeof addWatched === 'function') {
+                addWatched(watchedItem);
+            } else {
+                const w = getWatched();
+                const existing = w.findIndex(i => String(i.id) === String(watchedItem.id));
+                if (existing !== -1) w.splice(existing, 1);
+                w.unshift(watchedItem);
+                saveWatched(w);
+            }
 
-            // update history storage, rendering handled in historial.js
+
+            try {
+                if (typeof saveToCache === 'function' && watchedItem.title) {
+                    const dataForCache = movie._raw || movie || watchedItem;
+                    saveToCache(watchedItem.title, dataForCache);
+                }
+            } catch (e) {
+                // ignore cache save errors
+            }
+
+            // DEBUG: ver watched guardado inmediatamente
+            try { console.log('[DBG handlerWatchedButton] getWatched():', getWatched()); } catch (e) { console.warn(e); }
+
+            // update the clicked button immediately
+            try {
+                if (typeof updateMarkButtonState === 'function') {
+                    updateMarkButtonState(btn, watchedItem.id);
+                } else {
+                    btn.textContent = 'Ya vista';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-secondary');
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.dataset.watched = 'true';
+                    btn.disabled = true;
+                }
+            } catch (e) { /* ignore */ }
+
+            // update all buttons across the page that reference this movie id
+            try {
+                if (typeof updateAllMarkButtons === 'function') {
+                    updateAllMarkButtons(watchedItem.id);
+                } else {
+                    const nodes = Array.from(document.querySelectorAll(`[data-movie-id="${watchedItem.id}"]`));
+                    nodes.forEach(n => {
+                        const b = (n.tagName && n.tagName.toLowerCase() === 'button') ? n : n.querySelector('button[data-action="mark-watched"], button[data-movie-id]');
+                        if (b) {
+                            b.textContent = 'Ya vista';
+                            b.classList.remove('btn-success');
+                            b.classList.add('btn-secondary');
+                            b.disabled = true;
+                            b.dataset.watched = 'true';
+                        }
+                    });
+                }
+            } catch (e) { console.warn('updateAllMarkButtons error', e); }
+
+            // update history storage and state
             const nuevoHistorial = guardarEnHistorial(watchedItem.title);
             actualizarHistorialEnStorage(nuevoHistorial);
             state.historial = nuevoHistorial;
             state.busquedaActual = watchedItem.title;
 
+            // rerender watched list if helper exists
+            try { if (typeof renderWatchedMovies === 'function') renderWatchedMovies(); } catch (e) { /* ignore */ }
+
         } catch (e) {
             console.error('Error guardando watchedItem:', e);
-
-            btn.disabled = false;
-
+            // re-enable button so user can retry
+            try { btn.disabled = false; } catch (_) { /* ignore */ }
             errorModal('errorWatched');
             return;
         }
