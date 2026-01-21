@@ -316,31 +316,75 @@
       if (!tmdbId) {
         throw new Error('No TMDB id disponible para detalle');
       }
+
       const data = await window.TMDBApi.getMovieById(tmdbId);
+
       const poster = data.poster || (data.raw && data.raw.poster_path ? IMG_BASE + POSTER_SIZE + data.raw.poster_path : '../assets/placeholder.png');
+
       const html = `
-        <div class="d-flex gap-3 flex-column flex-md-row">
-          <img src="${poster}" alt="${escapeHtml(data.title)}" style="width:160px; height:240px; object-fit:cover; border-radius:6px"/>
-          <div class="flex-fill">
-            <h5>${escapeHtml(data.title)}</h5>
-            <p class="mb-1"><strong>Año:</strong> ${data.release_date ? data.release_date.slice(0, 4) : '—'}</p>
-            <p class="mb-1"><strong>Rating TMDB:</strong> ${data.vote_average ?? '—'}</p>
-            <p class="mb-1"><strong>Géneros:</strong> ${(data.raw && data.raw.genres || []).map(g => g.name).join(', ')}</p>
-            <p class="mt-2">${escapeHtml(data.overview || 'Sin descripción.')}</p>
-            <div class="mt-3">
-              <button id="tmdb-mark-watched" class="btn btn-sm btn-primary">Marcar como vista</button>
-            </div>
+      <div class="d-flex gap-3 flex-column flex-md-row">
+        <img src="${poster}" alt="${escapeHtml(data.title)}" style="width:160px; height:240px; object-fit:cover; border-radius:6px"/>
+        <div class="flex-fill">
+          <h5>${escapeHtml(data.title)}</h5>
+          <p class="mb-1"><strong>Año:</strong> ${data.release_date ? data.release_date.slice(0, 4) : '—'}</p>
+          <p class="mb-1"><strong>Rating TMDB:</strong> ${data.vote_average ?? '—'}</p>
+          <p class="mb-1"><strong>Géneros:</strong> ${(data.raw && data.raw.genres || []).map(g => g.name).join(', ')}</p>
+          <p class="mt-2">${escapeHtml(data.overview || 'Sin descripción.')}</p>
+          <div class="mt-3 d-flex justify-content-end">
+            <button id="tmdb-mark-watched" class="btn btn-sm btn-success">Marcar como vista</button>
           </div>
         </div>
-      `;
+      </div>
+    `;
       modalBody.innerHTML = html;
       if (modalTitle) modalTitle.textContent = data.title || 'Detalles';
 
-      const markBtn = modalBody.querySelector('#tmdb-mark-watched');
-      if (markBtn) {
+      // compute canonical id (uses helper from common.js)
+      let canonicalId = null;
+      try {
+        canonicalId = typeof getCanonicalMovieIdFromRaw === 'function' ? getCanonicalMovieIdFromRaw(data.raw || data) : null;
+        if (!canonicalId) {
+          // fallback: tmdb id if available
+          if (data.tmdb_id) canonicalId = `tmdb:${data.tmdb_id}`;
+          else if (data.raw && data.raw.id) canonicalId = `tmdb:${data.raw.id}`;
+        }
+      } catch (e) {
+        canonicalId = (data.tmdb_id ? `tmdb:${data.tmdb_id}` : (data.raw && data.raw.id ? `tmdb:${data.raw.id}` : null));
+      }
+
+      const markBtnOriginal = modalBody.querySelector('#tmdb-mark-watched');
+      if (markBtnOriginal) {
+        // attach canonical id to button
+        if (canonicalId) markBtnOriginal.dataset.movieId = canonicalId;
+
+        // set initial visual state based on watched list
+        try {
+          if (typeof updateMarkButtonState === 'function') {
+            updateMarkButtonState(markBtnOriginal, canonicalId);
+          } else {
+            // fallback simple check
+            const exists = (typeof getWatched === 'function') && getWatched().some(w => String(w.id) === String(canonicalId));
+            if (exists) {
+              markBtnOriginal.textContent = 'Ya vista';
+              markBtnOriginal.classList.remove('btn-success');
+              markBtnOriginal.classList.add('btn-secondary');
+              markBtnOriginal.disabled = true;
+              markBtnOriginal.dataset.watched = 'true';
+            }
+          }
+        } catch (e) { /* ignore state update errors */ }
+
+        // remove possible previous listeners by cloning the node
+        const markBtn = markBtnOriginal.cloneNode(true);
+        markBtnOriginal.parentNode.replaceChild(markBtn, markBtnOriginal);
+
         markBtn.addEventListener('click', () => {
+          // prevent double action if already watched
+          if (markBtn.dataset.watched === 'true') return;
+
+          // build watched item (same shape your app expects)
           const movie = {
-            id: data.raw && data.raw.imdb_id ? data.raw.imdb_id : `tmdb:${data.tmdb_id || data.raw && data.raw.id}`,
+            id: data.raw && (data.raw.imdb_id || data.raw.imdbID) ? (data.raw.imdb_id || data.raw.imdbID) : (canonicalId || `tmdb:${data.tmdb_id || (data.raw && data.raw.id) || ''}`),
             title: data.title || '',
             year: data.release_date ? data.release_date.slice(0, 4) : '',
             poster: poster,
@@ -349,14 +393,66 @@
             note: '',
             sourceData: data.raw || data
           };
-          try {
-            const savedId = movie.id;
-            const watched = typeof getWatched === 'function' ? getWatched() : [];
-            watched.unshift(movie);
-            if (typeof saveWatched === 'function') saveWatched(watched);
-            if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
-            try { markBtn.blur(); } catch (e) { /* noop */ }
 
+          try {
+            // prefer helper addWatched (normaliza + persiste)
+            if (typeof addWatched === 'function') {
+              addWatched(movie);
+            } else {
+              const watched = typeof getWatched === 'function' ? getWatched() : [];
+              const idx = watched.findIndex(w => String(w.id) === String(movie.id));
+              if (idx !== -1) watched.splice(idx, 1);
+              watched.unshift(movie);
+              if (typeof saveWatched === 'function') saveWatched(watched);
+            }
+
+            const savedId = movie.id;
+
+            // update the modal button state
+            try {
+              if (typeof updateMarkButtonState === 'function') updateMarkButtonState(markBtn, savedId);
+              else {
+                markBtn.textContent = 'Ya vista';
+                markBtn.classList.remove('btn-success');
+                markBtn.classList.add('btn-secondary');
+                markBtn.disabled = true;
+                markBtn.dataset.watched = 'true';
+              }
+            } catch (e) {  }
+
+            // update all buttons across the page that reference this movie id
+            try {
+              if (typeof updateAllMarkButtons === 'function') updateAllMarkButtons(savedId);
+              else {
+               
+                const nodes = Array.from(document.querySelectorAll(`[data-movie-id="${savedId}"]`));
+                nodes.forEach(n => {
+                  if (n.tagName.toLowerCase() === 'button') {
+                    n.textContent = 'Ya vista';
+                    n.classList.remove('btn-success');
+                    n.classList.add('btn-secondary');
+                    n.disabled = true;
+                    n.dataset.watched = 'true';
+                  } else {
+                    const btnInner = n.querySelector('button[data-action="mark-watched"], button[data-movie-id]');
+                    if (btnInner) {
+                      btnInner.textContent = 'Ya vista';
+                      btnInner.classList.remove('btn-success');
+                      btnInner.classList.add('btn-secondary');
+                      btnInner.disabled = true;
+                      btnInner.dataset.watched = 'true';
+                    }
+                  }
+                });
+              }
+            } catch (e) {  }
+
+            // re-render listado watched if helper exists
+            try { if (typeof renderWatchedMovies === 'function') renderWatchedMovies(); } catch (e) { /* ignore */ }
+
+            try { markBtn.blur(); } catch (e) { /* ignore */ }
+
+            // show toast & setup undo behavior that also updates buttons on undo
             if (modalInstance) {
               modalEl.addEventListener('hidden.bs.modal', function onHidden() {
                 try {
@@ -370,11 +466,12 @@
                           onClick: () => {
                             try {
                               const w = typeof getWatched === 'function' ? getWatched() : [];
-                              const idx = w.findIndex(x => x.id === savedId);
+                              const idx = w.findIndex(x => String(x.id) === String(savedId));
                               if (idx !== -1) {
                                 w.splice(idx, 1);
                                 if (typeof saveWatched === 'function') saveWatched(w);
                                 if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
+                                if (typeof updateAllMarkButtons === 'function') updateAllMarkButtons(savedId);
                               }
                             } catch (e) { console.warn('Undo error', e); }
                           }
@@ -390,11 +487,12 @@
                           onClick: () => {
                             try {
                               const w = typeof getWatched === 'function' ? getWatched() : [];
-                              const idx = w.findIndex(x => x.id === savedId);
+                              const idx = w.findIndex(x => String(x.id) === String(savedId));
                               if (idx !== -1) {
                                 w.splice(idx, 1);
                                 if (typeof saveWatched === 'function') saveWatched(w);
                                 if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
+                                if (typeof updateAllMarkButtons === 'function') updateAllMarkButtons(savedId);
                               }
                             } catch (e) { console.warn('Undo error', e); }
                           }
@@ -408,18 +506,27 @@
                   try { modalEl.removeEventListener('hidden.bs.modal', onHidden); } catch (_) { /* ignore */ }
                 }
               }, { once: true });
+
               modalInstance.hide();
+            } else {
+              // if no modal instance, still show toast immediately
+              if (typeof window.showToast === 'function') {
+                window.showToast('Película marcada como vista', { duration: 5000 });
+              }
             }
+
           } catch (err) {
             console.warn('No se pudo marcar como vista: falta getWatched/saveWatched', err);
           }
         });
       }
+
     } catch (err) {
       console.error('Error fetching detail', err);
       modalBody.innerHTML = '<p>Error cargando detalles.</p>';
       if (modalTitle) modalTitle.textContent = 'Error';
     }
+
     if (modalInstance) modalInstance.show();
   }
 
