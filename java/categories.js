@@ -1,15 +1,13 @@
-// tmdb-browse.js - Prototipo cliente para filas tipo Netflix (usa TMDB)
-// Requiere: Bootstrap 5 (opcional), y los helpers getWatched/saveWatched si quieres marcar como vista.
+// tmdb-browse.js - Prototipo cliente para filas tipo Netflix (usa TMDB wrapper window.TMDBApi)
 (() => {
-  const TMDB_KEY = 'TU_TMDB_API_KEY_AQUI'; // <- reemplazá por tu TMDB key
-  if (!TMDB_KEY || TMDB_KEY === 'TU_TMDB_API_KEY_AQUI') {
-    console.warn('TMDB: poné tu TMDB_KEY en tmdb-browse.js para que funcione el prototipo.');
+  // Dependemos de window.TMDBApi (proporcionado por java/api.js)
+  if (!window.TMDBApi) {
+    console.warn('TMDBApi no disponible. Asegurate de cargar java/api.js con una TMDB key local.');
     return;
   }
 
-  const API_BASE = 'https://api.themoviedb.org/3';
-  const IMG_BASE = 'https://image.tmdb.org/t/p/';
-  const POSTER_SIZE = 'w342';
+  const IMG_BASE = (window.TMDB_CONFIG && window.TMDB_CONFIG.IMG_BASE) || 'https://image.tmdb.org/t/p/';
+  const POSTER_SIZE = (window.TMDB_CONFIG && window.TMDB_CONFIG.POSTER_SIZE) || 'w342';
 
   const rowsContainer = document.getElementById('tmdb-rows');
   const genreSelect = document.getElementById('tmdb-genre-select');
@@ -28,7 +26,6 @@
   if (_reducedMotionMQ) {
     const _onReducedMotionChange = (e) => {
       const reduced = e.matches;
-      // update existing scrollers' inline scroll-behavior so keyboard/arrow uses the correct mode
       document.querySelectorAll('.tmdb-scroller').forEach(s => {
         try { s.style.scrollBehavior = reduced ? 'auto' : 'smooth'; } catch (err) { /* ignore */ }
       });
@@ -40,21 +37,13 @@
     }
   }
 
-  // helper fetch
-  async function tmdbFetch(path, params = {}) {
-    const url = new URL(API_BASE + path);
-    url.searchParams.set('api_key', TMDB_KEY);
-    for (const k in params) {
-      if (params[k] != null) url.searchParams.set(k, params[k]);
-    }
-    const res = await fetch(url.toString());
-    if (!res.ok) throw new Error(`TMDB fetch ${url} -> ${res.status}`);
-    return res.json();
-  }
-
+  // helper: load genres via TMDBApi._rawFetch
   async function loadGenres() {
     if (genreCache.list) return genreCache.list;
-    const data = await tmdbFetch('/genre/movie/list', { language: 'es-ES' });
+    if (!window.TMDBApi || typeof window.TMDBApi._rawFetch !== 'function') {
+      throw new Error('TMDBApi._rawFetch not available');
+    }
+    const data = await window.TMDBApi._rawFetch('/genre/movie/list', { language: 'es-ES' });
     genreCache.list = data.genres || [];
     genreCache.list.forEach(g => genreCache.byId.set(String(g.id), g));
     return genreCache.list;
@@ -63,16 +52,35 @@
   async function loadMoviesFor(key, fetchFn) {
     if (moviesCache.has(key)) {
       const cached = moviesCache.get(key);
-      // cached may be a Promise or resolved results; return awaited value
       return await cached;
     }
-    const p = fetchFn().then(r => r).catch(err => { moviesCache.delete(key); throw err; });
+    const p = (async () => {
+      try {
+        const r = await fetchFn();
+        return r;
+      } catch (err) {
+        moviesCache.delete(key);
+        throw err;
+      }
+    })();
     moviesCache.set(key, p);
     return await p;
   }
 
   // create poster card with overlay and accessibility
-  function createPosterCard(movie) {
+  function createPosterCard(movieRaw) {
+    // movieRaw may be either the mapped shape from TMDBApi (title, poster, tmdb_id, id 'tmdb:123', etc)
+    // or the older raw TMDB result (with poster_path). Normalize minimally:
+    const movie = (movieRaw && movieRaw.title) ? movieRaw : {
+      title: movieRaw.title || movieRaw.name || '',
+      poster_path: movieRaw.poster_path,
+      poster: movieRaw.poster || null,
+      vote_average: movieRaw.vote_average ?? movieRaw.vote,
+      id: movieRaw.id || movieRaw.tmdb_id || null,
+      tmdb_id: movieRaw.tmdb_id || movieRaw.id || null,
+      raw: movieRaw
+    };
+
     const card = document.createElement('div');
     card.className = 'tmdb-poster-card';
     card.setAttribute('tabindex', '0');
@@ -95,10 +103,11 @@
     img.style.objectFit = 'cover';
     img.style.height = '240px';
 
-    if (movie.poster_path) {
-      img.src = `${IMG_BASE}${POSTER_SIZE}${movie.poster_path}`;
-    } else if (movie.poster) {
+    // resolve poster src
+    if (movie.poster) {
       img.src = movie.poster;
+    } else if (movie.poster_path) {
+      img.src = `${IMG_BASE}${POSTER_SIZE}${movie.poster_path}`;
     } else {
       img.src = '../assets/placeholder.png';
     }
@@ -107,7 +116,7 @@
     const overlay = document.createElement('div');
     overlay.className = 'tmdb-poster-overlay';
     overlay.innerHTML = `
-      <div class="badge bg-dark mt-2" style="opacity:.9"> Rating: ${movie.vote_average ?? ''}</div>
+      <div class="badge bg-dark mt-2" style="opacity:.95; color: #fff;">${movie.vote_average != null ? `Rating: ${movie.vote_average}` : ''}</div>
     `;
 
     const caption = document.createElement('div');
@@ -122,7 +131,15 @@
     card.appendChild(overlay);
     card.appendChild(caption);
 
-    const open = () => openDetailModal(movie.id, card);
+    const open = () => {
+      // determine numeric tmdb id if available
+      let tmdbId = null;
+      if (movie.tmdb_id) tmdbId = Number(movie.tmdb_id);
+      else if (movie.id && typeof movie.id === 'string' && movie.id.startsWith('tmdb:')) tmdbId = Number(movie.id.split(':')[1]);
+      else if (!isNaN(Number(movie.id))) tmdbId = Number(movie.id);
+      openDetailModal(tmdbId, card);
+    };
+
     card.addEventListener('click', open);
     card.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); }
@@ -145,18 +162,14 @@
     wrap.appendChild(box);
     wrap.appendChild(caption);
 
-    // ocupar el mismo comportamiento flex que .tmdb-poster-card
     wrap.style.flex = '0 0 auto';
     wrap.style.boxSizing = 'border-box';
-
-    // etiqueta para depuración
     wrap.dataset.skeleton = 'true';
     return wrap;
   }
 
   function showSkeletons(scroller, count = 6) {
     if (!scroller) return;
-    // evita duplicados
     if (scroller.querySelector('.tmdb-skeleton-item')) return;
     for (let i = 0; i < count; i++) {
       scroller.appendChild(createSkeletonCard());
@@ -171,7 +184,6 @@
   // === end skeleton helpers ===
 
 
-  // render a row with arrows and load more button
   // render a row with arrows and load more button
   function renderRow({ id, title, initialMovies = [], loadMoreFn }) {
     if (document.getElementById(`tmdb-row-${id}`)) return null;
@@ -193,12 +205,12 @@
     const prevBtn = document.createElement('button');
     prevBtn.className = 'tmdb-arrow-btn';
     prevBtn.setAttribute('aria-label', `Mover ${title} izquierda`);
-    prevBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 12L6 8L10 4" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    prevBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     const nextBtn = document.createElement('button');
     nextBtn.className = 'tmdb-arrow-btn';
     nextBtn.setAttribute('aria-label', `Mover ${title} derecha`);
-    nextBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4L10 8L6 12" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    nextBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     controls.appendChild(prevBtn);
     controls.appendChild(nextBtn);
@@ -218,7 +230,6 @@
     scroller.setAttribute('aria-label', `${title} - fila de películas`);
     scroller.setAttribute('role', 'region');
 
-
     scroller.addEventListener('keydown', (ev) => {
       if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight' || ev.key === 'Home' || ev.key === 'End') {
         ev.preventDefault();
@@ -232,27 +243,23 @@
       }
     });
 
-
     showSkeletons(scroller, 6);
 
-    // append any initial movies passed
+    // append any initial movies passed (assume they are already in mapped shape or TMDB raw)
     initialMovies.forEach(m => scroller.appendChild(createPosterCard(m)));
 
-    // arrows behaviour: scroll by visible width (or 3 cards)
+    // arrows behaviour
     const scrollAmount = () => Math.min(scroller.clientWidth, 560);
 
     prevBtn.addEventListener('click', () => {
       const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
       scroller.scrollBy({ left: -scrollAmount(), behavior });
-
     });
     nextBtn.addEventListener('click', () => {
       const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
       scroller.scrollBy({ left: scrollAmount(), behavior });
-
     });
 
-    // show/hide arrows based on scroll (desktop only)
     function updateArrows() {
       prevBtn.style.visibility = scroller.scrollLeft > 10 ? 'visible' : 'hidden';
       nextBtn.style.visibility = (scroller.scrollWidth - scroller.clientWidth - scroller.scrollLeft) > 10 ? 'visible' : 'hidden';
@@ -261,7 +268,6 @@
     window.addEventListener('resize', throttle(updateArrows, 200));
     setTimeout(updateArrows, 250);
 
-    // controls area with "Cargar más"
     const controlsRow = document.createElement('div');
     controlsRow.className = 'd-flex gap-2 mt-2 align-items-center justify-content-end';
     const loadMoreBtn = document.createElement('button');
@@ -274,11 +280,11 @@
       loadMoreBtn.textContent = 'Cargando...';
       try {
         const newMovies = await loadMoreFn();
-        newMovies.forEach(m => scroller.appendChild(createPosterCard(m)));
+        (newMovies || []).forEach(m => scroller.appendChild(createPosterCard(m)));
         updateArrows();
       } catch (err) {
         console.error('Error loadMore', err);
-        showToast('Error cargando más películas.', { duration: 5000 });
+        if (typeof window.showToast === 'function') window.showToast('Error cargando más películas.', { duration: 5000 });
       } finally {
         loadMoreBtn.disabled = false;
         loadMoreBtn.textContent = 'Cargar más';
@@ -289,7 +295,6 @@
     row.appendChild(controlsRow);
     rowsContainer.appendChild(row);
 
-    // devolver el scroller para poder inyectar resultados desde fuera (first load)
     return scroller;
   }
 
@@ -308,8 +313,11 @@
     const modalInstance = (typeof bootstrap !== 'undefined') ? new bootstrap.Modal(modalEl) : null;
 
     try {
-      const data = await tmdbFetch(`/movie/${tmdbId}`, { language: 'es-ES' });
-      const poster = data.poster_path ? IMG_BASE + POSTER_SIZE + data.poster_path : '../assets/placeholder.png';
+      if (!tmdbId) {
+        throw new Error('No TMDB id disponible para detalle');
+      }
+      const data = await window.TMDBApi.getMovieById(tmdbId);
+      const poster = data.poster || (data.raw && data.raw.poster_path ? IMG_BASE + POSTER_SIZE + data.raw.poster_path : '../assets/placeholder.png');
       const html = `
         <div class="d-flex gap-3 flex-column flex-md-row">
           <img src="${poster}" alt="${escapeHtml(data.title)}" style="width:160px; height:240px; object-fit:cover; border-radius:6px"/>
@@ -317,7 +325,7 @@
             <h5>${escapeHtml(data.title)}</h5>
             <p class="mb-1"><strong>Año:</strong> ${data.release_date ? data.release_date.slice(0, 4) : '—'}</p>
             <p class="mb-1"><strong>Rating TMDB:</strong> ${data.vote_average ?? '—'}</p>
-            <p class="mb-1"><strong>Géneros:</strong> ${(data.genres || []).map(g => g.name).join(', ')}</p>
+            <p class="mb-1"><strong>Géneros:</strong> ${(data.raw && data.raw.genres || []).map(g => g.name).join(', ')}</p>
             <p class="mt-2">${escapeHtml(data.overview || 'Sin descripción.')}</p>
             <div class="mt-3">
               <button id="tmdb-mark-watched" class="btn btn-sm btn-primary">Marcar como vista</button>
@@ -332,96 +340,79 @@
       if (markBtn) {
         markBtn.addEventListener('click', () => {
           const movie = {
-            id: data.imdb_id || `tmdb:${data.id}`,
+            id: data.raw && data.raw.imdb_id ? data.raw.imdb_id : `tmdb:${data.tmdb_id || data.raw && data.raw.id}`,
             title: data.title || '',
             year: data.release_date ? data.release_date.slice(0, 4) : '',
             poster: poster,
             viewedAt: new Date().toISOString(),
             rating: null,
             note: '',
-            sourceData: data
+            sourceData: data.raw || data
           };
           try {
             const savedId = movie.id;
-
             const watched = typeof getWatched === 'function' ? getWatched() : [];
             watched.unshift(movie);
             if (typeof saveWatched === 'function') saveWatched(watched);
             if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
+            try { markBtn.blur(); } catch (e) { /* noop */ }
 
-            try { markBtn.blur(); } catch (e) { }
-
-
-            // Reemplaza esta parte dentro del markBtn click handler (la rama modalInstance)
             if (modalInstance) {
-              // Añadimos el listener ANTES de ocultar el modal para no perder el evento
               modalEl.addEventListener('hidden.bs.modal', function onHidden() {
                 try {
                   if (window.innerWidth > 576) {
-                    // Desktop: restaurar foco primero, luego mostrar toast (toast no debe robar foco)
                     tryFocus(savedTrigger);
-                    // debug
-                    // console.log('hidden.bs.modal fired - desktop, launching toast', savedId);
-                    window.showToast('Película marcada como vista', {
-                      duration: 6000,
-                      action: {
-                        label: 'Deshacer',
-                        onClick: () => {
-                          try {
-                            const w = typeof getWatched === 'function' ? getWatched() : [];
-                            const idx = w.findIndex(x => x.id === savedId);
-                            if (idx !== -1) {
-                              w.splice(idx, 1);
-                              if (typeof saveWatched === 'function') saveWatched(w);
-                              if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
-                            }
-                          } catch (e) {
-                            console.warn('Undo error', e);
+                    if (typeof window.showToast === 'function') {
+                      window.showToast('Película marcada como vista', {
+                        duration: 6000,
+                        action: {
+                          label: 'Deshacer',
+                          onClick: () => {
+                            try {
+                              const w = typeof getWatched === 'function' ? getWatched() : [];
+                              const idx = w.findIndex(x => x.id === savedId);
+                              if (idx !== -1) {
+                                w.splice(idx, 1);
+                                if (typeof saveWatched === 'function') saveWatched(w);
+                                if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
+                              }
+                            } catch (e) { console.warn('Undo error', e); }
                           }
                         }
-                      }
-                    });
+                      });
+                    }
                   } else {
-                    // Mobile: mostrar toast primero (el toast puede gestionar su propio foco en mobile)
-                    // console.log('hidden.bs.modal fired - mobile, launching toast', savedId);
-                    window.showToast('Película marcada como vista', {
-                      duration: 6000,
-                      action: {
-                        label: 'Deshacer',
-                        onClick: () => {
-                          try {
-                            const w = typeof getWatched === 'function' ? getWatched() : [];
-                            const idx = w.findIndex(x => x.id === savedId);
-                            if (idx !== -1) {
-                              w.splice(idx, 1);
-                              if (typeof saveWatched === 'function') saveWatched(w);
-                              if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
-                            }
-                          } catch (e) {
-                            console.warn('Undo error', e);
+                    if (typeof window.showToast === 'function') {
+                      window.showToast('Película marcada como vista', {
+                        duration: 6000,
+                        action: {
+                          label: 'Deshacer',
+                          onClick: () => {
+                            try {
+                              const w = typeof getWatched === 'function' ? getWatched() : [];
+                              const idx = w.findIndex(x => x.id === savedId);
+                              if (idx !== -1) {
+                                w.splice(idx, 1);
+                                if (typeof saveWatched === 'function') saveWatched(w);
+                                if (typeof renderWatchedMovies === 'function') renderWatchedMovies();
+                              }
+                            } catch (e) { console.warn('Undo error', e); }
                           }
                         }
-                      }
-                    });
+                      });
+                    }
                   }
                 } catch (e) {
                   console.warn('hidden.bs.modal handler error', e);
                 } finally {
-                  // el listener se ejecuta solo una vez por { once: true } si lo pusiste, pero lo limpiamos de todas formas
                   try { modalEl.removeEventListener('hidden.bs.modal', onHidden); } catch (_) { /* ignore */ }
                 }
               }, { once: true });
-
-              // Ahora sí ocultamos el modal (listener ya está activo)
               modalInstance.hide();
             }
-
-
-
           } catch (err) {
             console.warn('No se pudo marcar como vista: falta getWatched/saveWatched', err);
           }
-
         });
       }
     } catch (err) {
@@ -453,8 +444,6 @@
 
   // init: robusto — re-consulta nodos, logs y fallback si falla la API de géneros
   async function init() {
-
-    // re-obtener nodos del DOM dentro de init para asegurarnos que existen
     const rowsContainerEl = document.getElementById('tmdb-rows');
     const genreSelectEl = document.getElementById('tmdb-genre-select');
     const refreshGenresBtnEl = document.getElementById('tmdb-refresh-genres');
@@ -468,23 +457,19 @@
       let genres;
       try {
         genres = await loadGenres();
-
       } catch (err) {
         console.error('tmdb: loadGenres falló, aplicando fallback local', err);
-        // fallback: al menos poner las tres categorías que queremos por defecto
         genres = [
           { id: 28, name: 'Acción' },
           { id: 35, name: 'Comedia' },
           { id: 10751, name: 'Familia' }
         ];
-        // actualizar genreCache para que createGenreRow pueda usarlo
         genreCache.list = genres;
         genreCache.byId.set('28', { id: 28, name: 'Acción' });
         genreCache.byId.set('35', { id: 35, name: 'Comedia' });
         genreCache.byId.set('10751', { id: 10751, name: 'Familia' });
       }
 
-      // comprobar que existe el select y rellenarlo
       if (genreSelectEl) {
         genreSelectEl.innerHTML = `<option value="">-- Seleccionar género --</option>`;
         genres.forEach(g => {
@@ -497,7 +482,6 @@
         if (lastGenre && genreSelectEl.querySelector(`option[value="${lastGenre}"]`)) {
           genreSelectEl.value = lastGenre;
         }
-
       }
 
       // Populares
@@ -510,14 +494,19 @@
           loadMoreFn: async () => {
             page++;
             const key = `popular|${page}`;
-            const data = await loadMoviesFor(key, () => tmdbFetch('/movie/popular', { language: 'es-ES', page }));
-            return data.results || [];
+            const data = await loadMoviesFor(key, async () => {
+              const res = await window.TMDBApi.getPopular(page);
+              return { results: res.results || [] };
+            });
+            return (data.results || []);
           }
         });
-        // initial load explicitly calling the loader and appending into scroller
         (async () => {
           try {
-            const first = await loadMoviesFor(`popular|1`, () => tmdbFetch('/movie/popular', { language: 'es-ES', page: 1 }));
+            const first = await loadMoviesFor(`popular|1`, async () => {
+              const res = await window.TMDBApi.getPopular(1);
+              return { results: res.results || [] };
+            });
             removeSkeletons(scroller);
             (first.results || []).forEach(m => scroller && scroller.appendChild(createPosterCard(m)));
           } catch (err) {
@@ -536,13 +525,25 @@
           loadMoreFn: async () => {
             page++;
             const key = `top_rated|${page}`;
-            const data = await loadMoviesFor(key, () => tmdbFetch('/movie/top_rated', { language: 'es-ES', page }));
-            return data.results || [];
+            const data = await loadMoviesFor(key, async () => {
+              const res = await window.TMDBApi._rawFetch('/movie/top_rated', { language: 'es-ES', page });
+              return {
+                results: (res.results || []).map(r => {
+                  // normalize via TMDBApi mapping if possible
+                  if (r && r.id) return { title: r.title || r.name, poster_path: r.poster_path, vote_average: r.vote_average, id: r.id, raw: r, tmdb_id: r.id };
+                  return r;
+                })
+              };
+            });
+            return (data.results || []);
           }
         });
         (async () => {
           try {
-            const first = await loadMoviesFor(`top_rated|1`, () => tmdbFetch('/movie/top_rated', { language: 'es-ES', page: 1 }));
+            const first = await loadMoviesFor(`top_rated|1`, async () => {
+              const res = await window.TMDBApi._rawFetch('/movie/top_rated', { language: 'es-ES', page: 1 });
+              return { results: res.results || [] };
+            });
             removeSkeletons(scroller);
             (first.results || []).forEach(m => scroller && scroller.appendChild(createPosterCard(m)));
           } catch (err) {
@@ -554,7 +555,7 @@
       // Helper para crear fila por género (gid = TMDB genre id)
       async function createGenreRow(gid, forcedTitle) {
         const rowId = `genre_${gid}`;
-        if (document.getElementById(`tmdb-row-${rowId}`)) return; // ya existe
+        if (document.getElementById(`tmdb-row-${rowId}`)) return;
         let page = 0;
         const title = forcedTitle || `${genreCache.byId.get(String(gid))?.name || gid}`;
         const scroller = renderRow({
@@ -564,13 +565,18 @@
           loadMoreFn: async () => {
             page++;
             const key = `discover_genre_${gid}|${page}`;
-            const data = await loadMoviesFor(key, () => tmdbFetch('/discover/movie', { with_genres: gid, sort_by: 'popularity.desc', language: 'es-ES', page }));
-            return data.results || [];
+            const data = await loadMoviesFor(key, async () => {
+              const res = await window.TMDBApi.discoverByGenre(gid, page);
+              return { results: res.results || [] };
+            });
+            return (data.results || []);
           }
         });
-        // initial load
         try {
-          const first = await loadMoviesFor(`discover_genre_${gid}|1`, () => tmdbFetch('/discover/movie', { with_genres: gid, sort_by: 'popularity.desc', language: 'es-ES', page: 1 }));
+          const first = await loadMoviesFor(`discover_genre_${gid}|1`, async () => {
+            const res = await window.TMDBApi.discoverByGenre(gid, 1);
+            return { results: res.results || [] };
+          });
           removeSkeletons(scroller);
           (first.results || []).forEach(m => scroller && scroller.appendChild(createPosterCard(m)));
         } catch (err) {
@@ -578,26 +584,17 @@
         }
       }
 
-      // Crear las 3 filas de género que querías: Acción, Comedia, Infantiles(Family)
-      // TMDB genre ids: Action=28, Comedy=35, Family=10751
       await createGenreRow(28, 'Acción');
       await createGenreRow(35, 'Comedia');
       await createGenreRow(10751, 'Familia');
 
-      // --- AFTER your createGenreRow definition (inside init) ---
-      // Exponer createGenreRow para que la función global pueda usarla si es necesario
       window.createGenreRow = createGenreRow;
-
-      // Reemplazar showRestoreToast existente por esta versión robusta.
-      // Puedes pegarla dentro de init() (o fuera), pero la dejo como función global
-      // para poder llamarla desde consola también.
 
       // small improvements: compute original padding from computed style (not just inline)
       const originalBodyPaddingBottom = window.getComputedStyle(document.body).paddingBottom || '';
 
       function animateIn(el) {
         if (!el) return;
-        // Si el usuario prefiere reducir movimiento, evitar animaciones
         if (prefersReducedMotion()) {
           try { el.classList.add('is-visible'); el.style.visibility = 'visible'; el.style.opacity = '1'; } catch (e) { /* noop */ }
           return;
@@ -650,7 +647,6 @@
             document.body.appendChild(container);
           }
 
-
           try {
             container.style.position = 'fixed';
             container.style.zIndex = '99999';
@@ -669,11 +665,9 @@
               container.style.maxWidth = '380px';
             }
           } catch (e) { /* ignore style errors */ }
-          // evitar duplicados
 
           if (container.querySelector(`[data-row="${rowId}"]`)) return;
 
-          // crear toast
           const toastEl = document.createElement('div');
           toastEl.className = 'tmdb-toast';
           toastEl.setAttribute('data-row', rowId);
@@ -694,7 +688,6 @@
           toastEl.setAttribute('role', 'status');
           toastEl.setAttribute('aria-atomic', 'true');
 
-          // contenido
           const textDiv = document.createElement('div');
           textDiv.style.flex = '1';
           textDiv.style.fontSize = '0.95rem';
@@ -734,22 +727,17 @@
 
           requestAnimationFrame(() => {
             try {
-              // Dejar animateIn para la animación; pero también forzamos inline styles para visibilidad inmediata.
               toastEl.style.visibility = 'visible';
               toastEl.style.opacity = '1';
               toastEl.style.zIndex = '200000';
-              // También para que quede por delante de otros elementos si es necesario
               animateIn(toastEl);
             } catch (e) { /* ignore */ }
           });
 
-
-          // focus (ayuda en mobile para traer el toast a la vista)
           if (window.innerWidth <= 576 && !prefersReducedMotion()) {
             goBtn.focus({ preventScroll: true });
           }
 
-          // handlers
           const removeToast = () => {
             if (prefersReducedMotion()) {
               try { toastEl.remove(); } catch (e) { }
@@ -763,7 +751,6 @@
           };
 
           const handleGo = async () => {
-
             try {
               const rowEl = document.getElementById(rowId);
               const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
@@ -805,14 +792,10 @@
             document.body.style.paddingBottom = originalBodyPaddingBottom || '';
           }
         });
-
       };
 
       window.showToast = function (message, options = {}) {
-        console.log('showToast called:', message, options);
         const duration = (typeof options.duration === 'number') ? options.duration : 5000;
-
-        // ensure container
         let container = document.getElementById('tmdb-toasts');
         if (!container) {
           container = document.createElement('div');
@@ -822,10 +805,8 @@
           container.setAttribute('role', 'status');
           container.setAttribute('aria-atomic', 'true');
           document.body.appendChild(container);
-          console.log('created tmdb-toasts container');
         }
 
-        // force container styles so it is above modal/backdrop and visible
         try {
           container.style.position = 'fixed';
           container.style.zIndex = '999999';
@@ -841,9 +822,8 @@
             container.style.bottom = '0.75rem';
             container.style.maxWidth = '380px';
           }
-        } catch (e) { console.warn('container style error', e); }
+        } catch (e) { /* ignore */ }
 
-        // create toast element
         const toastEl = document.createElement('div');
         toastEl.className = 'tmdb-toast';
         Object.assign(toastEl.style, {
@@ -904,28 +884,21 @@
         toastEl.appendChild(closeBtn);
 
         container.appendChild(toastEl);
-        console.log('toast appended to container, children:', container.children.length);
 
-        // force visible immediately and above everything
         requestAnimationFrame(() => {
           try {
             toastEl.style.visibility = 'visible';
             toastEl.style.opacity = '1';
             toastEl.style.transform = 'translateY(0)';
             toastEl.style.zIndex = '200000';
-            // add class for transition if present
             toastEl.classList.add('is-visible');
-            console.log('forced toast visible');
-          } catch (e) {
-            console.warn('force visible failed', e);
-          }
+          } catch (e) { /* ignore */ }
         });
 
         function safeRemove() {
           try {
             toastEl.classList.remove('is-visible');
             toastEl.classList.add('is-hiding');
-            // remove after short timeout to allow CSS transition (if any)
             setTimeout(() => {
               try { toastEl.remove(); updateBodyForToasts(); } catch (e) { /* ignore */ }
             }, 220);
@@ -940,10 +913,7 @@
         return { close: safeRemove, element: toastEl };
       };
 
-      // Restaurar la última selección (si existe) — ejecutarlo después de crear las filas por defecto
-
-
-      // hookup del select de géneros (usa la referencia local, si existe)
+      // hookup del select de géneros
       if (genreSelectEl) {
         genreSelectEl.addEventListener('change', async (e) => {
           const gid = e.target.value;
@@ -952,16 +922,12 @@
           const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
           const rowId = `genre_${gid}`;
           if (document.getElementById(`tmdb-row-${rowId}`)) {
-
             document.getElementById(`tmdb-row-${rowId}`).scrollIntoView({ behavior });
             return;
           }
           await createGenreRow(gid);
           const el = document.getElementById(`tmdb-row-${rowId}`);
-          if (el) {
-
-            el.scrollIntoView({ behavior });
-          };
+          if (el) el.scrollIntoView({ behavior });
         });
       }
 
@@ -972,13 +938,11 @@
           const existingRow = document.getElementById(`tmdb-row-genre_${lastGenre}`);
           const genreName = genreCache.byId.get(String(lastGenre))?.name || 'género';
           showRestoreToast(`Último género: ${genreName}`, `tmdb-row-genre_${lastGenre}`, String(lastGenre));
-
         }
       } catch (err) {
         console.warn('tmdb: error durante restauración de género', err);
       }
 
-      // hookup refresh button si existe
       if (refreshGenresBtnEl) {
         refreshGenresBtnEl.addEventListener('click', async () => {
           genreCache.list = null;
@@ -995,7 +959,6 @@
           }
         });
       }
-
 
     } catch (err) {
       console.error('TMDB init failed', err);
@@ -1019,8 +982,5 @@
       } catch (e) { return false; }
     }
   };
-
-
-
 
 })();

@@ -157,13 +157,7 @@ const cargarHistorialDesdeStorage = () => {
 };
 cargarHistorialDesdeStorage();
 
-/**
- * guardarEnHistorial(titulo)
- * - Normaliza título (trim) y evita duplicados (case-insensitive).
- * - Mantiene máximo 10 elementos.
- * - Actualiza state.historial y devuelve el nuevo array sin persistir automáticamente.
- * - Nota: la persistencia en storage la realiza actualizarHistorialEnStorage()
- */
+
 const guardarEnHistorial = (titulo) => {
   const raw = titulo == null ? '' : String(titulo).trim();
   if (!raw) return state.historial ? [...state.historial] : [];
@@ -237,16 +231,38 @@ const debounce = (fn, wait = 300) => {
   return wrapped;
 };
 
+/* isDifferent: comparador robusto que soporta tanto el shape de OMDB como el mapeo TMDB.
+   Comprueba título, año, poster y overview/Plot (y rating).
+*/
 function isDifferent(oldData, newData) {
   if (!oldData || !newData) return true;
 
-  const fields = ['Title', 'Year', 'Poster', 'Runtime', 'imdbRating'];
-  for (const f of fields) {
-    const a = oldData[f] == null ? '' : String(oldData[f]);
-    const b = newData[f] == null ? '' : String(newData[f]);
+  // Helper para leer campo buscando nombres alternativos
+  const getField = (obj, keys) => {
+    if (!obj) return '';
+    for (const k of keys) {
+      if (typeof obj[k] !== 'undefined' && obj[k] !== null) return String(obj[k]);
+    }
+    return '';
+  };
+
+  // Campos a comparar con aliases
+  const checks = [
+    { keysA: ['Title', 'title'], keysB: ['Title', 'title'] }, // title
+    { keysA: ['Year', 'year'], keysB: ['Year', 'year'] }, // year
+    { keysA: ['Poster', 'poster', 'poster_path'], keysB: ['Poster', 'poster', 'poster_path'] }, // poster
+    { keysA: ['Runtime', 'runtime'], keysB: ['Runtime', 'runtime'] }, // runtime
+    { keysA: ['imdbRating', 'vote_average'], keysB: ['imdbRating', 'vote_average'] }, // rating
+    { keysA: ['Plot', 'plot', 'overview'], keysB: ['Plot', 'plot', 'overview'] } // synopsis / overview
+  ];
+
+  for (const chk of checks) {
+    const a = (getField(oldData, chk.keysA) || '').trim();
+    const b = (getField(newData, chk.keysB) || '').trim();
     if (a !== b) return true;
   }
 
+  // Fallback deep compare when above fields equal (still safe)
   try {
     return JSON.stringify(oldData) !== JSON.stringify(newData);
   } catch (e) {

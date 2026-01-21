@@ -1,8 +1,3 @@
-/* home.js
-   Lógica del buscador, sugerencias y renderizado.
-   Este archivo asume que common.js ya fue cargado (state, helpers de cache, debounce, etc).
-*/
-
 /* DOM */
 const botonBuscar = document.getElementById('btnPelicula');
 const resultados = document.getElementById('resultados');
@@ -17,8 +12,6 @@ let selectedIndex = -1;
 let currentSuggestions = [];
 const maxSuggestions = 6;
 
-/* API key (ocupas reemplazar/gestionar según tu repo) */
-const apikey = 'TU_OMDB_API_KEY_AQUI';
 
 /* Inicialización segura de atributos/focus */
 if (inputBuscar) {
@@ -41,8 +34,22 @@ const desactivarLoader = () => {
     if (inputBuscar) inputBuscar.disabled = false;
 };
 
-const mostrarResultados = (peliculaEncontrada) => {
+const normalizarPelicula = (raw) => {
+    if (!raw) return null;
+    return {
+        Title: raw.Title || raw.title || raw.name || '',
+        Year: raw.Year || raw.year || (raw.release_date ? (String(raw.release_date).slice(0, 4)) : ''),
+        Poster: raw.Poster || raw.poster || raw.image || '',
+        imdbID: raw.imdbID || raw.imdb_id || (raw.tmdb_id ? `tmdb:${raw.tmdb_id}` : raw.id || ''),
+        _raw: raw
+    };
+
+};
+
+const mostrarResultados = (peliculaEncontradaRaw) => {
     if (!resultados) return;
+
+    const peliculaEncontrada = normalizarPelicula(peliculaEncontradaRaw);
 
     resultados.innerHTML = '';
     resultados.classList.replace('d-none', 'd-block');
@@ -51,7 +58,7 @@ const mostrarResultados = (peliculaEncontrada) => {
     card.classList.add('card', 'mx-auto');
     card.style.width = '18rem';
 
-    const placeHolderSrc = './assets/placeholder.png';
+    const placeHolderSrc = '../assets/placeholder.png';
     const posterRaw = (peliculaEncontrada.Poster || '').trim();
     const posterSrc = (!posterRaw || posterRaw === 'N/A') ? placeHolderSrc : posterRaw;
 
@@ -91,7 +98,15 @@ const mostrarResultados = (peliculaEncontrada) => {
     btnWatched.textContent = 'Marcar como vista';
     btnWatched.setAttribute('type', 'button');
     btnWatched.setAttribute('aria-pressed', 'false')
-    btnWatched.dataset.movie = JSON.stringify(peliculaEncontrada);
+    btnWatched.dataset.movie = JSON.stringify({
+        ...peliculaEncontrada._raw,
+        _normalized: {
+            Title: peliculaEncontrada.Title,
+            Year: peliculaEncontrada.Year,
+            Poster: peliculaEncontrada.Poster,
+            imdbID: peliculaEncontrada.imdbID
+        }
+    });
     btnWatched.dataset.action = 'mark-watched'
 
     btnWatched.addEventListener('click', handlerWatchedButton);
@@ -114,7 +129,7 @@ const mostrarResultados = (peliculaEncontrada) => {
     resultados.appendChild(card);
 };
 
-/* Modal de error: usa bootstrap modal instanciado más arriba */
+/* Modal de error: usa bootstrap modal */
 const errorModal = (tipoError) => {
     if (!modalError) return;
     const modalTitle = document.getElementById('modalErrorTitulo');
@@ -298,23 +313,22 @@ const keydownHandler = (event) => {
 if (inputBuscar) inputBuscar.addEventListener('keydown', keydownHandler);
 
 /* backgroundRefresh (usa isDifferent y saveToCache de common.js) */
-async function backgroundRefresh(titulo, url, cached) {
+async function backgroundRefresh(titulo, cached) {
     try {
-        const respuestaBack = await fetch(url);
-        if (!respuestaBack.ok) return;
-
-        const dataBack = await respuestaBack.json();
-        if (!dataBack || dataBack.Response === "False") return;
+        if (!window.TMDBApi || typeof window.TMDBApi.search !== 'function') return;
+        const data = await window.TMDBApi.search(titulo, 1);
+        if (!data || !data.results || data.results.length === 0) return;
 
         if (state.busquedaActual !== titulo) return;
 
-        if (isDifferent(cached, dataBack)) {
-            saveToCache(titulo, dataBack);
-            mostrarResultados(dataBack);
+        const first = data.results[0];
+        if (isDifferent(cached, first)) {
+            saveToCache(titulo, first);
+            mostrarResultados(first);
 
-            state.historial = guardarEnHistorial(dataBack.Title || titulo);
+            state.historial = guardarEnHistorial(first.Title || titulo);
             actualizarHistorialEnStorage(state.historial);
-            state.busquedaActual = dataBack.Title || titulo;
+            state.busquedaActual = first.Title || titulo;
             // rendering of historial moved to historial.js
         }
     } catch (e) {
@@ -330,17 +344,13 @@ const obtenerPeliculas = async (titulo) => {
         return;
     }
 
-    const tituloParaUrl = encodeURIComponent(tituloTrim);
-    const url = `https://www.omdbapi.com/?apikey=${apikey}&t=${tituloParaUrl}`;
-
     const cached = getFromCache(tituloTrim);
     if (cached) {
         mostrarResultados(cached);
         state.historial = guardarEnHistorial(cached.Title || tituloTrim);
         actualizarHistorialEnStorage(state.historial);
         state.busquedaActual = tituloTrim;
-        // rendering of historial moved to historial.js
-        backgroundRefresh(tituloTrim, url, cached);
+        backgroundRefresh(tituloTrim, cached);
         return;
     }
 
@@ -348,38 +358,44 @@ const obtenerPeliculas = async (titulo) => {
 
     if (state.controlador) {
         state.controlador._manualAbort = true;
-        state.controlador.abort();
+        try { state.controlador.abort(); } catch (e) { /* ignore */ }
+
     }
     const controller = new AbortController();
     controller._manualAbort = false;
     state.controlador = controller;
 
     const timeoutMs = 8000;
-    const timeoutId = setTimeout(() => { controller.abort(); }, timeoutMs);
+    const timeoutId = setTimeout(() => {
+        try { controller.abort(); } catch (e) {/* ignore */ }
+    }, timeoutMs);
 
     try {
-        const respuesta = await fetch(url, { signal: controller.signal });
-        if (!respuesta.ok) {
-            const err = new Error(`HTTP ${respuesta.status}`);
+        if (!window.TMDBApi || typeof window.TMDBApi.search !== 'function') {
+            const err = new Error('No TMDB API available');
             err.type = 'errorServidor';
-            err.status = respuesta.status;
             throw err;
         }
-        const data = await respuesta.json();
 
-        if (data.Response === "False") {
-            const err = new Error(data.Error || 'Película no encontrada');
+        const data = await window.TMDBApi.search(tituloTrim, 1, { signal: controller.signal });
+
+        // validar antes de usar el primer resultado
+        if (!data || !Array.isArray(data.results) || data.results.length === 0) {
+            const err = new Error('Película no encontrada');
             err.type = 'peliculaNoEncontrada';
             throw err;
         }
 
-        if (state.controlador && state.controlador !== controller) {
-            return;
+        const pelicula = data.results[0];
+        if (!pelicula) {
+            const err = new Error('Película no encontrada (resultado vacío)');
+            err.type = 'peliculaNoEncontrada';
+            throw err;
         }
-        saveToCache(tituloTrim, data);
 
-        mostrarResultados(data);
-        state.historial = guardarEnHistorial(data.Title || tituloTrim);
+        saveToCache(tituloTrim, pelicula);
+        mostrarResultados(pelicula);
+        state.historial = guardarEnHistorial(pelicula.Title || tituloTrim);
         actualizarHistorialEnStorage(state.historial);
         state.busquedaActual = tituloTrim;
         // rendering of historial moved to historial.js
@@ -398,6 +414,7 @@ const obtenerPeliculas = async (titulo) => {
             errorModal('timeout');
             if (resultados) resultados.classList.replace('d-block', 'd-none');
         } else {
+            console.error('Buscar error:', error);
             errorModal('default');
             if (resultados) resultados.classList.replace('d-block', 'd-none');
         }
@@ -410,7 +427,7 @@ const obtenerPeliculas = async (titulo) => {
     }
 };
 
-/* Búsqueda automática y sugerencias (usa debounce de common.js) */
+/* Búsqueda automática y sugerencias  */
 const handleDebounce = () => {
     if (!inputBuscar) return;
     const tituloTrim = inputBuscar.value.trim();
@@ -427,30 +444,58 @@ const hadleSuggestInput = async () => {
     const termTrim = String(term || '').trim();
     const termKey = termTrim.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
 
-    if (!sugerenciasCache.has(termKey)) {
-        if (!suggestionsLista.querySelector('li.suggestion-loading')) {
-            const li = document.createElement('li');
-            li.setAttribute('role', 'option');
-            li.setAttribute('aria-disabled', 'true');
-            li.classList.add('suggestion-item', 'list-group-item', 'list-group-item-secondary', 'disabled', 'suggestion-loading');
-            li.textContent = 'Cargando...';
-            suggestionsLista.appendChild(li);
-            suggestionsLista.classList.remove('d-none');
-            suggestionsLista.setAttribute('aria-hidden', 'false');
-            inputBuscar.setAttribute('aria-expanded', 'true');
-            suggestionsVisible = true;
-            inputBuscar.removeAttribute('aria-activedescendant');
-            selectedIndex = -1;
-        }
-    }
-
     if (termKey.length < 2 || state.cargando) {
         renderSugerencias([], term);
         return;
     }
 
-    const list = await obtenerSugerencias(termKey);
-    renderSugerencias(list, term);
+    if (sugerenciasCache.has(termKey)) {
+        const cached = sugerenciasCache.get(termKey);
+        renderSugerencias(cached, term);
+        return;
+    }
+
+    if (controladorSugerencia) {
+        try { controladorSugerencia.abort(); } catch (e) { /* ignore */ }
+    }
+    controladorSugerencia = new AbortController();
+
+    try {
+        if (!window.TMDBApi || typeof window.TMDBApi.search !== 'function') {
+            renderSugerencias([], term);
+            return;
+        }
+
+        const data = await window.TMDBApi.search(termTrim, 1, { signal: controladorSugerencia.signal });
+        if (!data || !data.results) {
+            renderSugerencias([], term);
+            return;
+        }
+
+        const results = (data.results || []).slice(0, 6).map(r => ({
+            Title: r.Title || r.title || r.name || '',
+            Year: r.Year || r.year || '',
+            _id: r.tmdb_id || r.id || null
+        }));
+
+        sugerenciasCache.set(termKey, results);
+        if (sugerenciasCache.size > MAX_SUG_CACHE) {
+            const firstKey = sugerenciasCache.keys().next().value;
+            sugerenciasCache.delete(firstKey);
+        }
+
+        renderSugerencias(results, term);
+
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            renderSugerencias([], term);
+            return;
+        }
+        renderSugerencias([], term);
+    } finally {
+        controladorSugerencia = null;
+    }
+
 };
 
 const suggestDebounced = debounce(hadleSuggestInput, 250);
@@ -484,52 +529,10 @@ const sugerenciasCache = new Map();
 let controladorSugerencia = null;
 
 const obtenerSugerencias = async (term) => {
-    const termTrim = String(term || '').trim();
-    const termNormalized = termTrim.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
-    const termKey = termNormalized;
-    const termForUrl = encodeURIComponent(termNormalized);
-    if (termTrim.length < 2) return [];
-    if (sugerenciasCache.has(termKey)) {
-        return sugerenciasCache.get(termKey);
-    }
-    if (controladorSugerencia) {
-        controladorSugerencia.abort();
-    }
-    controladorSugerencia = new AbortController();
-    const url = `https://www.omdbapi.com/?apikey=${apikey}&s=${termForUrl}`;
-    try {
-        const respuestaSugerencia = await fetch(url, { signal: controladorSugerencia.signal });
-        if (!respuestaSugerencia.ok) {
-            return [];
-        }
-        const dataSugerencia = await respuestaSugerencia.json();
-        if (!dataSugerencia || dataSugerencia.Response === "False") {
-            if (dataSugerencia.Error && dataSugerencia.Error.includes('Too many')) {
-                return 'too-many';
-            };
-            if (dataSugerencia.Error === "Movie not found!") {
-                return [];
-            }
-            return [];
-        }
-
-        const results = (dataSugerencia.Search || []).slice(0, 6);
-        sugerenciasCache.set(termKey, results);
-        if (sugerenciasCache.size > MAX_SUG_CACHE) {
-            const firstKey = sugerenciasCache.keys().next().value;
-            sugerenciasCache.delete(firstKey);
-        }
-        return results;
-
-    } catch (e) {
-        if (e.name === 'AbortError') {
-            return [];
-        }
-        return [];
-    }
-    finally {
-        controladorSugerencia = null;
-    }
+    if (!term) return [];
+    const normalized = String(term).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
+    if (sugerenciasCache.has(normalized)) return sugerenciasCache.get(normalized);
+    return [];
 };
 
 /* UI sugerencias y selección (con mejoras para accesibilidad) */
@@ -682,16 +685,14 @@ const renderSugerencias = (list, term) => {
 window.obtenerPeliculas = obtenerPeliculas;
 window.buscarPelicula = buscarPelicula;
 
-// Al cargar la página comprobamos si venimos desde historial con una búsqueda pendiente
+
 document.addEventListener('DOMContentLoaded', () => {
     try {
         const pending = localStorage.getItem('tmdb.navigateSearch');
         if (!pending) return;
-        // eliminamos la marca inmediatamente para evitar doble ejecución
         localStorage.removeItem('tmdb.navigateSearch');
 
         if (inputBuscar) {
-            // rellenar input y ejecutar búsqueda
             inputBuscar.value = pending;
             // pequeño delay para asegurar que otros inits han terminado
             setTimeout(() => {
@@ -701,7 +702,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (typeof window.buscarPelicula === 'function') {
                         window.buscarPelicula();
                     } else {
-                        // como fallback, intentar llamar la función local (si existe en scope)
                         try { obtenerPeliculas(pending); } catch (_) { /* ignore */ }
                     }
                 } catch (e) {
@@ -709,7 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 50);
         } else {
-            // fallback: guardar en state para que otra lógica lo aproveche
             state.busquedaActual = pending;
         }
     } catch (e) {
