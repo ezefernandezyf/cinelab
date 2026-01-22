@@ -2,7 +2,9 @@
 
 [Demo en Vercel](https://cinelab-movies.vercel.app/)
 
-Pequeña SPA para buscar películas usando The Movie Database (TMDB).  
+CineLab es un sitio web estático multipágina para buscar películas usando The Movie Database (TMDB).  
+El proyecto no es una única SPA: contiene varias páginas HTML (index y secciones) que componen la experiencia.
+
 Genera un archivo cliente `java/config.js` en tiempo de build con la API key (no se almacena en el repo).
 
 ---
@@ -17,7 +19,7 @@ Genera un archivo cliente `java/config.js` en tiempo de build con la API key (no
 - Generación automática del config cliente en build (evita subir la API key).
 
 ## Estructura relevante
-- `index.html`, `sections/` — vistas estáticas de la app.  
+- `index.html`, `sections/` — páginas HTML estáticas de la app.  
 - `java/` — scripts JS servidos al cliente (`api.js`, `categories.js`, etc.).  
 - `scripts/generate-config.js` — script que genera `java/config.js` durante el build.  
 - `package.json` — contiene `postinstall` que ejecuta el script en CI / Vercel.  
@@ -84,7 +86,7 @@ Si no tienes Node, puedes usar Vercel para generar el archivo durante el deploy 
 ## Probar / Depurar en producción
 
 - Verificar `java/config.js`:
-  - Abrí `https://TU-SITE/vercel.app/java/config.js` y confirmá `window.TMDB_CONFIG`.
+  - Abrí `https://TU-SITE.vercel.app/java/config.js` y confirmá `window.TMDB_CONFIG`.
 - Prueba rápida desde la consola del navegador:
 ```javascript
 // Ver config
@@ -125,4 +127,4 @@ fetch(`${window.TMDB_CONFIG.API_BASE}movie/popular?api_key=${window.TMDB_CONFIG.
 
 ## Licencia
 
-MIT License — ver `LICENSE` (o reemplazar por otra si preferís).
+Este repositorio se publica bajo la licencia MIT. Ver archivo `LICENSE` para el texto completo.
