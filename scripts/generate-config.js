@@ -6,7 +6,7 @@ const path = require('path');
 const key = process.env.TMDB_API_KEY || '';
 const outPath = path.join(__dirname, '..', 'java', 'config.js');
 
-const API_BASE = 'https://api.themoviedb.org/3/';
+const API_BASE = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/';
 const POSTER_SIZE = 'w342';
 
