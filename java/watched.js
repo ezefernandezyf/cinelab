@@ -164,7 +164,6 @@
         const movies = getWatched();
         if (movies.length === 0) {
             watchedList.innerHTML = '<p class="text-light">No has marcado ninguna película como vista.</p>';
-            watchedList.innerHTML += '<a href="index.html" class="btn btn-primary mt-3">Volver al buscador</a>';
             return;
         }
         watchedList.innerHTML = '';
