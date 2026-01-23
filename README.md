@@ -1,7 +1,5 @@
 # CineLab
 
-[Demo en Vercel](https://cinelab-movies.vercel.app/)
-
 CineLab es un sitio web estático multipágina para buscar películas usando The Movie Database (TMDB).  
 El proyecto no es una única SPA: contiene varias páginas HTML (index y secciones) que componen la experiencia.
 
@@ -17,6 +15,23 @@ Genera un archivo cliente `java/config.js` en tiempo de build con la API key (no
 - Categorías / listas (populares, mejor puntuadas, por género).
 - Marcar películas como "vistas" y ver historial.
 - Generación automática del config cliente en build (evita subir la API key).
+
+## Demo & Capturas
+
+[Demo en Vercel](https://cinelab-movies.vercel.app/)
+
+**GIF demostración** — búsqueda y marcado como vista:  
+![Demo GIF](/assets/screenshots/demo-search.gif)
+
+**Capturas**
+- Desktop — Pantalla principal (home):  
+  ![CineLab - home (desktop)](/assets/screenshots/home-desktop.png)
+
+- Desktop — Sección "Películas vistas":  
+  ![CineLab - películas vistas (desktop)](/assets/screenshots/watched-desktop.png)
+
+- Mobile — Vista home (emulación móvil):  
+  ![CineLab - home (mobile)](/assets/screenshots/home-mobile.png)
 
 ## Estructura relevante
 - `index.html`, `sections/` — páginas HTML estáticas de la app.  
@@ -128,3 +143,5 @@ fetch(`${window.TMDB_CONFIG.API_BASE}movie/popular?api_key=${window.TMDB_CONFIG.
 ## Licencia
 
 Este repositorio se publica bajo la licencia MIT. Ver archivo `LICENSE` para el texto completo.
+
+
