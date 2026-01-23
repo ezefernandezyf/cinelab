@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
       - name: Install dependencies
         run: |
@@ -36,7 +35,6 @@ jobs:
 
       - name: Run lint (if defined)
         run: |
-          # Comprueba con Node si package.json tiene scripts.lint
           node -e "try{ const p=require('./package.json'); process.exit(p.scripts && p.scripts.lint ? 0 : 1) }catch(e){ process.exit(1) }"
           if [ $? -eq 0 ]; then
             echo "Run lint script"
