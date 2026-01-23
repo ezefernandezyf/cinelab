@@ -1,24 +1,33 @@
 # CineLab
 
+[![Demo](https://img.shields.io/badge/demo-vercel-00ADEF)](https://cinelab-movies.vercel.app/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Topics](https://img.shields.io/badge/topics-cinema%20%7C%20movies-blueviolet)](#)
+
 CineLab es un sitio web estático multipágina para buscar películas usando The Movie Database (TMDB).  
 El proyecto no es una única SPA: contiene varias páginas HTML (index y secciones) que componen la experiencia.
 
 Genera un archivo cliente `java/config.js` en tiempo de build con la API key (no se almacena en el repo).
+
+## Contenido
+- [Estado](#estado)
+- [Demo & Capturas](#demo--capturas)
+- [Estructura relevante](#estructura-relevante)
+- [Desarrollo local](#desarrollo-local)
+- [Despliegue en Vercel](#despliegue-en-vercel)
+- [Probar / Depurar en producción](#probar--depurar-en-produccion)
+- [Mejoras pendientes / TODO](#mejoras-pendientes--todo)
+- [Contribuir](#contribuir)
+- [Licencia](#licencia)
 
 ---
 
 ## Estado
 - Deploy: https://cinelab-movies.vercel.app/
 
-## Características
-- Búsqueda de películas (TMDB).
-- Categorías / listas (populares, mejor puntuadas, por género).
-- Marcar películas como "vistas" y ver historial.
-- Generación automática del config cliente en build (evita subir la API key).
-
 ## Demo & Capturas
 
-[Demo en Vercel](https://cinelab-movies.vercel.app/)
+Demo en Vercel: https://cinelab-movies.vercel.app
 
 **GIF demostración** — búsqueda y marcado como vista:  
 ![Demo GIF](/assets/screenshots/demo-search.gif)
@@ -47,22 +56,15 @@ Genera un archivo cliente `java/config.js` en tiempo de build con la API key (no
 
 ---
 
-## Desarrollo local
+## Quick start
 
-Requisitos mínimos
-- Git
-- Un navegador moderno
-
-Opcional (para generar config localmente)
-- Node.js LTS si quieres ejecutar `scripts/generate-config.js` localmente.
-
-Clonar y preparar
+1. Clona el repo:
 ```bash
 git clone https://github.com/ezefernandezyf/cinelab.git
 cd cinelab
 ```
 
-Generar `java/config.js` localmente (si tienes Node)
+2. (Opcional) Generar `java/config.js` localmente (Node):
 ```bash
 # Unix / Git Bash
 export TMDB_API_KEY="tu_api_key_aqui"
@@ -72,17 +74,13 @@ node scripts/generate-config.js
 # $env:TMDB_API_KEY="tu_api_key_aqui"
 # node scripts/generate-config.js
 ```
-> Esto crea `java/config.js` localmente (NO lo commits). Luego abre `index.html` en un servidor estático.
+> Esto crea `java/config.js` localmente (NO lo comitees). Luego abre `index.html` en un servidor estático.
 
-Servir la carpeta localmente (sin Node)
-- Con Python 3:
+3. Servir la carpeta localmente (sin Node):
 ```bash
 python -m http.server 8080
-# Luego abrir http://localhost:8080
+# Abrir http://localhost:8080
 ```
-- Con VSCode: usar la extensión Live Server.
-
-Si no tienes Node, puedes usar Vercel para generar el archivo durante el deploy (configura `TMDB_API_KEY` en Vercel).
 
 ---
 
@@ -143,5 +141,3 @@ fetch(`${window.TMDB_CONFIG.API_BASE}movie/popular?api_key=${window.TMDB_CONFIG.
 ## Licencia
 
 Este repositorio se publica bajo la licencia MIT. Ver archivo `LICENSE` para el texto completo.
-
-

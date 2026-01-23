@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - '**/*.js'
+      - package.json
+      - package-lock.json
+      - .github/workflows/**
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  install-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Found package-lock.json — using npm ci"
+            npm ci
+          else
+            echo "No package-lock.json — using npm install"
+            npm install
+          fi
+
+      - name: Run lint (if defined)
+        run: |
+          # Comprobamos sin romper el shell: imprimimos "yes" o "no"
+          has_lint=$(node -e "try { const p=require('./package.json'); console.log(p.scripts && p.scripts.lint ? 'yes' : 'no') } catch(e) { console.log('no') }")
+          echo "has_lint=$has_lint"
+          if [ "$has_lint" = "yes" ]; then
+            echo "Run lint script"
+            npm run lint
+          else
+            echo "No lint script defined, skipping lint..."
+          fi
+
+      - name: Run build (if defined)
+        run: |
+          has_build=$(node -e "try { const p=require('./package.json'); console.log(p.scripts && p.scripts.build ? 'yes' : 'no') } catch(e) { console.log('no') }")
+          echo "has_build=$has_build"
+          if [ "$has_build" = "yes" ]; then
+            echo "Run build script"
+            npm run build
+          else
+            echo "No build script defined, skipping build..."
+          fi
