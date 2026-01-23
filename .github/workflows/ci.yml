@@ -35,20 +35,23 @@ jobs:
 
       - name: Run lint (if defined)
         run: |
-          node -e "try{ const p=require('./package.json'); process.exit(p.scripts && p.scripts.lint ? 0 : 1) }catch(e){ process.exit(1) }"
-          if [ $? -eq 0 ]; then
+          # Comprobamos sin romper el shell: imprimimos "yes" o "no"
+          has_lint=$(node -e "try { const p=require('./package.json'); console.log(p.scripts && p.scripts.lint ? 'yes' : 'no') } catch(e) { console.log('no') }")
+          echo "has_lint=$has_lint"
+          if [ "$has_lint" = "yes" ]; then
             echo "Run lint script"
             npm run lint
           else
-            echo "No lint script defined, skipping..."
+            echo "No lint script defined, skipping lint..."
           fi
 
       - name: Run build (if defined)
         run: |
-          node -e "try{ const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1) }catch(e){ process.exit(1) }"
-          if [ $? -eq 0 ]; then
+          has_build=$(node -e "try { const p=require('./package.json'); console.log(p.scripts && p.scripts.build ? 'yes' : 'no') } catch(e) { console.log('no') }")
+          echo "has_build=$has_build"
+          if [ "$has_build" = "yes" ]; then
             echo "Run build script"
             npm run build
           else
-            echo "No build script defined, skipping..."
+            echo "No build script defined, skipping build..."
           fi
