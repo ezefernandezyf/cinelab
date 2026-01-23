@@ -20,7 +20,7 @@ Genera un archivo cliente `java/config.js` en tiempo de build con la API key (no
 
 [Demo en Vercel](https://cinelab-movies.vercel.app/)
 
-**GIF demostración** — búsqueda y marcado como vista (3–6s):  
+**GIF demostración** — búsqueda y marcado como vista:  
 ![Demo GIF](/assets/screenshots/demo-search.gif)
 
 **Capturas**
